@@ -1,0 +1,90 @@
+{
+  "project": "SignalScope Backend API",
+  "description": "Complete FastAPI backend with JWT authentication, PostgreSQL database, and network coverage analytics",
+  "setup_steps": [
+    "1. Create backend directory: mkdir backend && cd backend",
+    "2. Install Python 3.9+ and PostgreSQL",
+    "3. Create virtual environment: python -m venv venv",
+    "4. Activate: source venv/bin/activate (Linux/Mac) or venv\\Scripts\\activate (Windows)",
+    "5. Install dependencies: pip install fastapi uvicorn sqlalchemy psycopg2-binary pydantic pydantic-settings python-jose passlib python-multipart email-validator bcrypt cryptography",
+    "6. Create database: psql -U postgres -c 'CREATE DATABASE signalscope;'",
+    "7. Set environment variables in .env file",
+    "8. Run: uvicorn app.main:app --reload --port 8000"
+  ],
+  "file_structure": {
+    "backend/": {
+      "app/": {
+        "__init__.py": "Empty init file",
+        "main.py": "FastAPI app with all routes",
+        "config.py": "Settings and environment variables",
+        "database.py": "SQLAlchemy database connection",
+        "models.py": "User, Tower, Report models",
+        "schemas.py": "Pydantic schemas for validation",
+        "auth/": {
+          "__init__.py": "Empty",
+          "utils.py": "JWT and password hashing utilities"
+        },
+        "utils/": {
+          "__init__.py": "Empty",
+          "haversine.py": "Distance and signal strength calculations"
+        }
+      },
+      "seed_towers.py": "Script to populate tower data",
+      "requirements.txt": "Python dependencies",
+      ".env": "Environment variables"
+    }
+  },
+  "api_endpoints": {
+    "auth": [
+      "POST /auth/register - Register new user",
+      "POST /auth/login - Login and receive JWT token"
+    ],
+    "towers": [
+      "GET /api/towers - Get all towers (optional filters: operator, tech)",
+      "GET /api/towers/{id} - Get specific tower"
+    ],
+    "reports": [
+      "POST /api/reports - Submit signal report (Protected)",
+      "GET /api/reports - Get all reports (optional filter: carrier)"
+    ],
+    "analytics": [
+      "GET /api/analytics - Get dashboard analytics",
+      "GET /api/coverage/estimate?lat=X&lng=Y - Estimate signal at location"
+    ]
+  },
+  "database_schema": {
+    "users": {
+      "id": "SERIAL PRIMARY KEY",
+      "email": "VARCHAR UNIQUE NOT NULL",
+      "password_hash": "VARCHAR NOT NULL",
+      "name": "VARCHAR NOT NULL",
+      "created_at": "TIMESTAMP DEFAULT NOW()"
+    },
+    "towers": {
+      "id": "VARCHAR PRIMARY KEY",
+      "lat": "FLOAT NOT NULL",
+      "lng": "FLOAT NOT NULL",
+      "operator": "VARCHAR NOT NULL",
+      "height": "INTEGER NOT NULL",
+      "tech": "JSONB NOT NULL",
+      "created_at": "TIMESTAMP DEFAULT NOW()"
+    },
+    "reports": {
+      "id": "SERIAL PRIMARY KEY",
+      "user_id": "INTEGER REFERENCES users(id)",
+      "lat": "FLOAT NOT NULL",
+      "lng": "FLOAT NOT NULL",
+      "carrier": "VARCHAR NOT NULL",
+      "signal_strength": "INTEGER NOT NULL",
+      "device": "VARCHAR NOT NULL",
+      "timestamp": "TIMESTAMP DEFAULT NOW()"
+    }
+  },
+  "security_notes": [
+    "JWT tokens expire after 1 week (configurable)",
+    "Passwords hashed with bcrypt",
+    "CORS enabled for localhost:5173 and localhost:3000",
+    "Protected endpoints require Bearer token in Authorization header",
+    "Change SECRET_KEY in production!"
+  ]
+}

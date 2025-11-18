@@ -1,12 +1,19 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Container, Theme } from './settings/types';
+import { AuthProvider, useAuth } from './components/generated/AuthContext';
+import { LoginPage } from './components/generated/LoginPage';
+import { RegisterPage } from './components/generated/RegisterPage';
+import { ProtectedRoute } from './components/generated/ProtectedRoute';
 import { SignalScopeDashboard } from './components/generated/SignalScopeDashboard';
 
 let theme: Theme = 'dark';
 // only use 'centered' container for standalone components, never for full page apps or websites.
 let container: Container = 'none';
 
-function App() {
+function AppContent() {
+  const { user, isLoading } = useAuth();
+  const [showRegister, setShowRegister] = useState(false);
+
   function setTheme(theme: Theme) {
     if (theme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -18,9 +25,31 @@ function App() {
   setTheme(theme);
 
   const generatedComponent = useMemo(() => {
-    // THIS IS WHERE THE TOP LEVEL GENRATED COMPONENT WILL BE RETURNED!
-    return <SignalScopeDashboard />;
-  }, []);
+    if (isLoading) {
+      return (
+        <div className="h-screen w-screen flex items-center justify-center bg-gray-950">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-pink-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400">Loading SignalScope...</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (!user) {
+      return showRegister ? (
+        <RegisterPage onSwitchToLogin={() => setShowRegister(false)} />
+      ) : (
+        <LoginPage onSwitchToRegister={() => setShowRegister(true)} />
+      );
+    }
+
+    return (
+      <ProtectedRoute>
+        <SignalScopeDashboard />
+      </ProtectedRoute>
+    );
+  }, [user, isLoading, showRegister]);
 
   if (container === 'centered') {
     return (
@@ -31,6 +60,14 @@ function App() {
   } else {
     return generatedComponent;
   }
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
 }
 
 export default App;
