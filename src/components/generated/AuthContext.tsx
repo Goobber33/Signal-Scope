@@ -109,5 +109,5 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
     logout,
     isLoading
   };
-  return <AuthContext.Provider value={value} data-magicpath-id="0" data-magicpath-path="AuthContext.tsx">{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
