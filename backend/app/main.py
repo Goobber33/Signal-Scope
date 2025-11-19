@@ -353,7 +353,21 @@ async def health_check():
 
 @app.get("/")
 def root():
-    return {"message": "SignalScope API", "version": "1.0.0", "docs": "/docs"}
+    return {
+        "message": "SignalScope API", 
+        "version": "1.0.0", 
+        "docs": "/docs",
+        "endpoints": {
+            "register": "/auth/register",
+            "login": "/auth/login",
+            "health": "/health"
+        }
+    }
+
+@app.get("/test")
+def test():
+    """Test endpoint to verify app is running"""
+    return {"status": "ok", "message": "API is responding"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
