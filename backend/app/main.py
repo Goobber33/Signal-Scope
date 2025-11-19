@@ -117,7 +117,12 @@ security = HTTPBearer()
 
 @app.on_event("startup")
 async def startup_db_client():
-    await connect_to_mongo()
+    try:
+        await connect_to_mongo()
+    except Exception as e:
+        print(f"[WARNING] MongoDB connection failed on startup: {e}")
+        print("[INFO] App will continue, but database operations may fail")
+        print("[INFO] Connection will be retried on first database request")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -195,6 +200,12 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=422,
         headers=headers
     )
+
+# CORS preflight handlers
+@app.options("/auth/register")
+@app.options("/auth/login")
+async def options_handler():
+    return Response(status_code=200)
 
 # AUTH ENDPOINTS
 @app.post("/auth/register")

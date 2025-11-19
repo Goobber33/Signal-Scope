@@ -1,5 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from urllib.parse import urlparse
+from fastapi import HTTPException
 from .config import settings
 
 class MongoDB:
@@ -25,6 +26,14 @@ def get_database_name_from_url(url: str) -> str:
     return settings.DATABASE_NAME or "signalscope"
 
 async def get_database():
+    # Ensure connection is established
+    if db.client is None:
+        try:
+            await connect_to_mongo()
+        except Exception as e:
+            print(f"[ERROR] Failed to connect to MongoDB: {e}")
+            raise HTTPException(status_code=503, detail="Database connection unavailable")
+    
     database_name = get_database_name_from_url(settings.DATABASE_URL) or settings.DATABASE_NAME
     return db.client[database_name]
 
