@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import connect_to_mongo, close_mongo_connection
@@ -71,6 +70,9 @@ async def global_options(full_path: str, request: Request):
 async def add_cors_to_all_responses(request: Request, call_next):
     """Add CORS headers to ALL responses (including OPTIONS)"""
     
+    # Log every request
+    print(f"[MIDDLEWARE] {request.method} {request.url.path} | Origin: {request.headers.get('origin', 'NONE')}")
+    
     # Handle OPTIONS preflight requests
     if request.method == "OPTIONS":
         origin_header = request.headers.get("origin", "")
@@ -84,18 +86,29 @@ async def add_cors_to_all_responses(request: Request, call_next):
         else:
             origin = "*"
 
-        print(f"[CORS MIDDLEWARE] OPTIONS preflight: {request.url.path} | Origin: {origin_header} -> {origin}")
+        print(f"[CORS MIDDLEWARE] OPTIONS preflight detected!")
+        print(f"[CORS MIDDLEWARE] Path: {request.url.path}")
+        print(f"[CORS MIDDLEWARE] Origin: {origin_header}")
+        print(f"[CORS MIDDLEWARE] Allowed origins: {allowed}")
+        print(f"[CORS MIDDLEWARE] Returning origin: {origin}")
 
-        return Response(
+        headers = {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "3600",
+        }
+        
+        print(f"[CORS MIDDLEWARE] Response headers: {headers}")
+        
+        response = Response(
             status_code=200,
-            headers={
-                "Access-Control-Allow-Origin": origin,
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
-                "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Max-Age": "3600",
-            }
+            headers=headers
         )
+        
+        print(f"[CORS MIDDLEWARE] OPTIONS response created and returning")
+        return response
     
     # For all other requests, process normally then add CORS headers
     response = await call_next(request)
