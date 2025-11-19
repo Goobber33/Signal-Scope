@@ -65,29 +65,40 @@ async def global_options(full_path: str, request: Request):
 
 
 # --------------------------------------------------------------------
-# 2. NORMAL CORS MIDDLEWARE
-# --------------------------------------------------------------------
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
-# --------------------------------------------------------------------
-# 3. FORCE CORS ON *EVERY* RESPONSE (backup in case OPTIONS handler misses)
+# 2. FORCE CORS ON *EVERY* RESPONSE (handles all CORS including OPTIONS)
 # --------------------------------------------------------------------
 @app.middleware("http")
 async def add_cors_to_all_responses(request: Request, call_next):
-    """Add CORS headers to all responses as a safety net"""
-    response = await call_next(request)
-
-    # Skip if this is an OPTIONS request (handled by explicit handler above)
+    """Add CORS headers to ALL responses (including OPTIONS)"""
+    
+    # Handle OPTIONS preflight requests
     if request.method == "OPTIONS":
-        print(f"[CORS MIDDLEWARE] OPTIONS request detected, headers should already be set")
-        return response
+        origin_header = request.headers.get("origin", "")
+        allowed = settings.cors_origins_list
+
+        # Determine which origin to allow
+        if origin_header and origin_header in allowed:
+            origin = origin_header
+        elif allowed:
+            origin = allowed[0]
+        else:
+            origin = "*"
+
+        print(f"[CORS MIDDLEWARE] OPTIONS preflight: {request.url.path} | Origin: {origin_header} -> {origin}")
+
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "3600",
+            }
+        )
+    
+    # For all other requests, process normally then add CORS headers
+    response = await call_next(request)
 
     origin_header = request.headers.get("origin", "")
     allowed = settings.cors_origins_list
@@ -100,14 +111,12 @@ async def add_cors_to_all_responses(request: Request, call_next):
     else:
         origin = "*"
 
-    # Inject CORS headers on ALL responses (backup for non-OPTIONS)
-    if "Access-Control-Allow-Origin" not in response.headers:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, *"
-        response.headers["Access-Control-Expose-Headers"] = "*"
-        print(f"[CORS MIDDLEWARE] Added CORS headers to {request.method} {request.url.path}: {origin}")
+    # Always add CORS headers to responses
+    response.headers["Access-Control-Allow-Origin"] = origin
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, *"
+    response.headers["Access-Control-Expose-Headers"] = "*"
 
     return response
 
