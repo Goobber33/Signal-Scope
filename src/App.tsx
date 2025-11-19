@@ -5,6 +5,7 @@ import { LoginPage } from './components/generated/LoginPage';
 import { RegisterPage } from './components/generated/RegisterPage';
 import { ProtectedRoute } from './components/generated/ProtectedRoute';
 import { SignalScopeDashboard } from './components/generated/SignalScopeDashboard';
+import { LandingPage } from './components/generated/LandingPage';
 
 let theme: Theme = 'dark';
 // only use 'centered' container for standalone components, never for full page apps or websites.
@@ -13,6 +14,7 @@ let container: Container = 'none';
 function AppContent() {
   const { user, isLoading } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
+  const [showLanding, setShowLanding] = useState(true);
 
   function setTheme(theme: Theme) {
     if (theme === 'dark') {
@@ -36,20 +38,35 @@ function AppContent() {
       );
     }
 
-    if (!user) {
-      return showRegister ? (
-        <RegisterPage onSwitchToLogin={() => setShowRegister(false)} />
-      ) : (
-        <LoginPage onSwitchToRegister={() => setShowRegister(true)} />
+    // Show landing page if user is not logged in and landing page should be shown
+    if (!user && showLanding) {
+      return (
+        <LandingPage onGetStarted={() => setShowLanding(false)} />
       );
     }
 
+    // Show login/register if user is not logged in and landing page is dismissed
+    if (!user && !showLanding) {
+      return showRegister ? (
+        <RegisterPage 
+          onSwitchToLogin={() => setShowRegister(false)} 
+          onReturnToLanding={() => setShowLanding(true)}
+        />
+      ) : (
+        <LoginPage 
+          onSwitchToRegister={() => setShowRegister(true)} 
+          onReturnToLanding={() => setShowLanding(true)}
+        />
+      );
+    }
+
+    // Show dashboard if user is logged in
     return (
       <ProtectedRoute>
         <SignalScopeDashboard />
       </ProtectedRoute>
     );
-  }, [user, isLoading, showRegister]);
+  }, [user, isLoading, showRegister, showLanding]);
 
   if (container === 'centered') {
     return (

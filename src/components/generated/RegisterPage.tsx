@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Signal, Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff, Check } from 'lucide-react';
+import { Signal, Mail, Lock, User, AlertCircle, Loader2, Eye, EyeOff, Check, ArrowLeft } from 'lucide-react';
 import { useAuth } from './AuthContext';
 interface RegisterPageProps {
   onSwitchToLogin: () => void;
+  onReturnToLanding?: () => void;
 }
 export const RegisterPage: React.FC<RegisterPageProps> = ({
-  onSwitchToLogin
+  onSwitchToLogin,
+  onReturnToLanding
 }) => {
   const {
     register
@@ -59,6 +61,17 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({
 
       <div className="relative w-full max-w-md">
         <div className="bg-gray-900/80 backdrop-blur-xl border border-gray-800 rounded-2xl shadow-2xl p-8">
+          {/* Return to Landing Page Button */}
+          {onReturnToLanding && (
+            <button
+              onClick={onReturnToLanding}
+              className="mb-4 flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm"
+            >
+              <ArrowLeft size={16} />
+              Return to Launch Page
+            </button>
+          )}
+
           {/* Logo & Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-pink-600 to-purple-600 rounded-2xl mb-4 shadow-lg shadow-pink-600/20">

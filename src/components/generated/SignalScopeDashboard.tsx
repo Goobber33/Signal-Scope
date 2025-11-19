@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Search, Signal, TowerControl, Activity, BarChart3, Filter, Menu, X, Plus, ChevronDown, Wifi, WifiOff, Smartphone, MapPinned, LogOut, User as UserIcon, Navigation, Star, Home, Briefcase, TrendingUp, AlertCircle, CheckCircle2, Award } from 'lucide-react';
+import { MapPin, Search, Signal, TowerControl, Activity, BarChart3, Filter, Menu, X, Plus, ChevronDown, Wifi, WifiOff, Smartphone, MapPinned, LogOut, User as UserIcon, Navigation, Star, Home, Briefcase, TrendingUp, AlertCircle, CheckCircle2, Award, Calendar, Map, Target, Zap } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from './AuthContext';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Circle } from 'react-leaflet';
@@ -459,34 +459,7 @@ export const SignalScopeDashboard = () => {
     }];
     setReports(mockReports);
   };
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-    // Auto-search if coordinates are detected
-    const coords = parseCoordinates(query);
-    if (coords) {
-      setMapCenter(coords);
-      setMapZoom(12);
-    }
-  };
 
-  const executeSearch = () => {
-    const coords = parseCoordinates(searchQuery);
-    if (coords) {
-      setMapCenter(coords);
-      setMapZoom(12);
-    } else if (searchQuery.trim()) {
-      // Could implement city/ZIP code search here
-      // For now, just keep the existing behavior
-      console.log('Searching for:', searchQuery);
-    }
-  };
-
-  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      executeSearch();
-    }
-  };
   const parseCoordinates = (query: string): {
     lat: number;
     lng: number;
@@ -501,6 +474,142 @@ export const SignalScopeDashboard = () => {
     }
     return null;
   };
+
+  // City to coordinates lookup based on cities in tower data
+  const cityLookup: Record<string, { lat: number; lng: number; name: string }> = {
+    'new york': { lat: 40.7128, lng: -74.0060, name: 'New York, NY' },
+    'nyc': { lat: 40.7128, lng: -74.0060, name: 'New York, NY' },
+    'new york city': { lat: 40.7128, lng: -74.0060, name: 'New York, NY' },
+    'los angeles': { lat: 34.0522, lng: -118.2437, name: 'Los Angeles, CA' },
+    'la': { lat: 34.0522, lng: -118.2437, name: 'Los Angeles, CA' },
+    'chicago': { lat: 41.8781, lng: -87.6298, name: 'Chicago, IL' },
+    'houston': { lat: 29.7604, lng: -95.3698, name: 'Houston, TX' },
+    'phoenix': { lat: 33.4484, lng: -112.0740, name: 'Phoenix, AZ' },
+    'philadelphia': { lat: 39.9526, lng: -75.1652, name: 'Philadelphia, PA' },
+    'san antonio': { lat: 29.4241, lng: -98.4936, name: 'San Antonio, TX' },
+    'san diego': { lat: 32.7157, lng: -117.1611, name: 'San Diego, CA' },
+    'dallas': { lat: 32.7767, lng: -96.7970, name: 'Dallas, TX' },
+    'san jose': { lat: 37.3382, lng: -121.8863, name: 'San Jose, CA' },
+    'austin': { lat: 30.2672, lng: -97.7431, name: 'Austin, TX' },
+    'jacksonville': { lat: 30.3322, lng: -81.6557, name: 'Jacksonville, FL' },
+    'fort worth': { lat: 32.7555, lng: -97.3308, name: 'Fort Worth, TX' },
+    'columbus': { lat: 39.9612, lng: -82.9988, name: 'Columbus, OH' },
+    'charlotte': { lat: 35.2271, lng: -80.8431, name: 'Charlotte, NC' },
+    'san francisco': { lat: 37.7749, lng: -122.4194, name: 'San Francisco, CA' },
+    'sf': { lat: 37.7749, lng: -122.4194, name: 'San Francisco, CA' },
+    'indianapolis': { lat: 39.7684, lng: -86.1581, name: 'Indianapolis, IN' },
+    'seattle': { lat: 47.6062, lng: -122.3321, name: 'Seattle, WA' },
+    'denver': { lat: 39.7392, lng: -104.9903, name: 'Denver, CO' },
+    'washington dc': { lat: 38.9072, lng: -77.0369, name: 'Washington, DC' },
+    'washington': { lat: 38.9072, lng: -77.0369, name: 'Washington, DC' },
+    'dc': { lat: 38.9072, lng: -77.0369, name: 'Washington, DC' },
+    'boston': { lat: 42.3601, lng: -71.0589, name: 'Boston, MA' },
+    'el paso': { lat: 31.7619, lng: -106.4850, name: 'El Paso, TX' },
+    'detroit': { lat: 42.3314, lng: -83.0458, name: 'Detroit, MI' },
+    'nashville': { lat: 36.1627, lng: -86.7816, name: 'Nashville, TN' },
+    'portland': { lat: 45.5152, lng: -122.6784, name: 'Portland, OR' },
+    'oklahoma city': { lat: 35.4676, lng: -97.5164, name: 'Oklahoma City, OK' },
+    'las vegas': { lat: 36.1699, lng: -115.1398, name: 'Las Vegas, NV' },
+    'vegas': { lat: 36.1699, lng: -115.1398, name: 'Las Vegas, NV' },
+    'memphis': { lat: 35.1495, lng: -90.0490, name: 'Memphis, TN' },
+    'louisville': { lat: 38.2527, lng: -85.7585, name: 'Louisville, KY' },
+    'baltimore': { lat: 39.2904, lng: -76.6122, name: 'Baltimore, MD' },
+    'milwaukee': { lat: 43.0389, lng: -87.9065, name: 'Milwaukee, WI' },
+    'albuquerque': { lat: 35.0844, lng: -106.6504, name: 'Albuquerque, NM' },
+    'tucson': { lat: 32.2226, lng: -110.9747, name: 'Tucson, AZ' },
+    'fresno': { lat: 36.7378, lng: -119.7871, name: 'Fresno, CA' },
+    'sacramento': { lat: 38.5816, lng: -121.4944, name: 'Sacramento, CA' },
+    'kansas city': { lat: 39.0997, lng: -94.5786, name: 'Kansas City, MO' },
+    'mesa': { lat: 33.4152, lng: -111.8315, name: 'Mesa, AZ' },
+    'atlanta': { lat: 33.7490, lng: -84.3880, name: 'Atlanta, GA' },
+    'miami': { lat: 25.7617, lng: -80.1918, name: 'Miami, FL' },
+    'minneapolis': { lat: 44.9778, lng: -93.2650, name: 'Minneapolis, MN' },
+  };
+
+  const findCityCoordinates = (query: string): { lat: number; lng: number; name: string } | null => {
+    const normalizedQuery = query.toLowerCase().trim();
+    
+    // Direct lookup
+    if (cityLookup[normalizedQuery]) {
+      return cityLookup[normalizedQuery];
+    }
+    
+    // Fuzzy match - find cities that contain the query
+    const matches = Object.entries(cityLookup).filter(([key]) => 
+      key.includes(normalizedQuery) || normalizedQuery.includes(key)
+    );
+    
+    if (matches.length > 0) {
+      // Return the best match (longest key that contains the query)
+      const bestMatch = matches.reduce((best, [key, value]) => 
+        key.length > best[0].length ? [key, value] : best
+      );
+      return bestMatch[1];
+    }
+    
+    return null;
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // Auto-search if coordinates are detected
+    const coords = parseCoordinates(query);
+    if (coords) {
+      setMapCenter(coords);
+      setMapZoom(12);
+      return;
+    }
+    // Also try city lookup for auto-search (but only if query looks complete)
+    // Only auto-search cities if the query matches exactly or is likely a city name
+    if (query.trim().length > 2 && !query.includes(',')) {
+      const cityData = findCityCoordinates(query);
+      if (cityData && query.toLowerCase() === cityData.name.toLowerCase().split(',')[0]) {
+        setMapCenter({ lat: cityData.lat, lng: cityData.lng });
+        setMapZoom(12);
+      }
+    }
+  };
+
+  const executeSearch = () => {
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    // Try parsing as coordinates first
+    const coords = parseCoordinates(query);
+    if (coords) {
+      setMapCenter(coords);
+      setMapZoom(12);
+      return;
+    }
+
+    // Try city lookup
+    const cityData = findCityCoordinates(query);
+    if (cityData) {
+      setMapCenter({ lat: cityData.lat, lng: cityData.lng });
+      setMapZoom(12);
+      return;
+    }
+
+    // Try ZIP code pattern (5 digits)
+    const zipPattern = /^\d{5}$/;
+    if (zipPattern.test(query)) {
+      // For ZIP codes, we could use a geocoding API, but for now show a message
+      // In production, you'd want to use a geocoding service here
+      console.log('ZIP code search not yet implemented:', query);
+      return;
+    }
+
+    // No match found
+    console.log('Location not found:', query);
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      executeSearch();
+    }
+  };
+
   const handleSubmitReport = async (report: Omit<SignalReport, 'id' | 'timestamp'>) => {
     // In production, this would be an API call with auth token
     // const response = await fetch('http://localhost:8000/api/reports', {
@@ -705,6 +814,126 @@ export const SignalScopeDashboard = () => {
       iconAnchor: [9, 9],
     });
   };
+  // Calculate user-specific analytics
+  const userReports = reports; // In production, filter by user ID
+  const userReportsByCarrier = userReports.reduce((acc, report) => {
+    if (!acc[report.carrier]) {
+      acc[report.carrier] = [];
+    }
+    acc[report.carrier].push(report.signalStrength);
+    return acc;
+  }, {} as Record<string, number[]>);
+
+  const userCarrierPerformance = Object.entries(userReportsByCarrier).map(([carrier, signals]) => {
+    const avgSignal = signals.reduce((sum, s) => sum + s, 0) / signals.length;
+    const bestSignal = Math.max(...signals);
+    const worstSignal = Math.min(...signals);
+    return {
+      carrier,
+      avgSignal: Math.round(avgSignal),
+      bestSignal,
+      worstSignal,
+      reportCount: signals.length,
+      color: carrier === 'T-Mobile' ? '#E20074' : carrier === 'Verizon' ? '#CD040B' : '#009FDB'
+    };
+  }).sort((a, b) => b.avgSignal - a.avgSignal);
+
+  // Coverage at favorite locations
+  const favoriteLocationCoverage = favoriteLocations.map(fav => {
+    const nearbyReports = reports.filter(r => {
+      const distance = calculateDistance(fav.lat, fav.lng, r.lat, r.lng);
+      return distance <= 2; // 2km radius
+    });
+    
+    const nearbyTowers = towers.filter(t => {
+      const distance = calculateDistance(fav.lat, fav.lng, t.lat, t.lng);
+      return distance <= 5; // 5km radius
+    });
+
+    const carrierScores: Record<string, { score: number; signal: number }> = {};
+    ['T-Mobile', 'Verizon', 'AT&T'].forEach(carrier => {
+      const carrierReports = nearbyReports.filter(r => r.carrier === carrier);
+      const carrierTowers = nearbyTowers.filter(t => t.operator === carrier);
+      
+      let avgSignal = -100;
+      if (carrierReports.length > 0) {
+        avgSignal = carrierReports.reduce((sum, r) => sum + r.signalStrength, 0) / carrierReports.length;
+      } else if (carrierTowers.length > 0) {
+        const nearestTower = carrierTowers.reduce((nearest, tower) => {
+          const dist = calculateDistance(fav.lat, fav.lng, tower.lat, tower.lng);
+          const nearestDist = calculateDistance(fav.lat, fav.lng, nearest.lat, nearest.lng);
+          return dist < nearestDist ? tower : nearest;
+        }, carrierTowers[0]);
+        const distance = calculateDistance(fav.lat, fav.lng, nearestTower.lat, nearestTower.lng);
+        avgSignal = Math.max(-120, -60 - (distance * 3));
+      }
+
+      let score = 0;
+      if (avgSignal >= -70) score = 100;
+      else if (avgSignal >= -80) score = 75;
+      else if (avgSignal >= -90) score = 50;
+      else if (avgSignal >= -100) score = 25;
+      else score = 10;
+      score = Math.min(100, score + (carrierTowers.length * 5));
+
+      carrierScores[carrier] = { score: Math.round(score), signal: Math.round(avgSignal) };
+    });
+
+    const bestCarrier = Object.entries(carrierScores).sort((a, b) => b[1].score - a[1].score)[0];
+    
+    return {
+      ...fav,
+      bestCarrier: bestCarrier ? bestCarrier[0] : 'Unknown',
+      bestScore: bestCarrier ? bestCarrier[1].score : 0,
+      carrierScores
+    };
+  });
+
+  // User's signal trend over time (last 7 days)
+  const userSignalTrend: Array<{ date: string; signal: number | null; count: number }> = (() => {
+    const now = new Date();
+    const days: Array<{ date: string; signal: number | null; count: number }> = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dayReports = userReports.filter(r => {
+        const reportDate = new Date(r.timestamp);
+        return reportDate.toDateString() === date.toDateString();
+      });
+      const avgSignal = dayReports.length > 0
+        ? dayReports.reduce((sum, r) => sum + r.signalStrength, 0) / dayReports.length
+        : null;
+      days.push({
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        signal: avgSignal ? Math.round(avgSignal) : null,
+        count: dayReports.length
+      });
+    }
+    return days;
+  })();
+
+  // Dead zones (poor signal areas user has encountered)
+  const deadZones = userReports
+    .filter(r => r.signalStrength <= -100)
+    .map(r => ({
+      lat: r.lat,
+      lng: r.lng,
+      signal: r.signalStrength,
+      carrier: r.carrier,
+      timestamp: r.timestamp,
+      location: `${r.lat.toFixed(3)}, ${r.lng.toFixed(3)}`
+    }))
+    .slice(0, 5); // Top 5 worst
+
+  // User's coverage map data (where they've reported)
+  const userCoverageMap = userReports.map(r => ({
+    lat: r.lat,
+    lng: r.lng,
+    signal: r.signalStrength,
+    carrier: r.carrier,
+    date: new Date(r.timestamp).toLocaleDateString()
+  }));
+
   const analyticsData = {
     towersByCarrier: [{
       name: 'T-Mobile',
@@ -1378,12 +1607,198 @@ export const SignalScopeDashboard = () => {
             )}
           </div>
 
-          <div className="h-80 bg-gray-900 border-t border-gray-800 overflow-y-auto">
+          <div className="h-96 bg-gray-900 border-t border-gray-800 overflow-y-auto">
             <div className="p-6">
-              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <BarChart3 size={20} />
-                Analytics Dashboard
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <BarChart3 size={20} />
+                  Analytics Dashboard
+                </h2>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <UserIcon size={14} />
+                  <span>Personalized Analytics</span>
+                </div>
+              </div>
+
+              {/* User-Specific Analytics Section */}
+              {userReports.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                    <Target size={16} className="text-pink-500" />
+                    My Coverage Analytics
+                  </h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                    {/* My Carrier Performance */}
+                    {userCarrierPerformance.length > 0 && (
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <h4 className="text-xs font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                          <Zap size={14} />
+                          My Carrier Performance
+                        </h4>
+                        <ResponsiveContainer width="100%" height={160}>
+                          <BarChart data={userCarrierPerformance}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                            <XAxis dataKey="carrier" stroke="#9ca3af" fontSize={11} />
+                            <YAxis stroke="#9ca3af" fontSize={11} />
+                            <Tooltip contentStyle={{
+                              backgroundColor: '#1f2937',
+                              border: '1px solid #374151',
+                              borderRadius: '8px',
+                              color: '#fff'
+                            }} />
+                            <Bar dataKey="avgSignal" radius={[4, 4, 0, 0]}>
+                              {userCarrierPerformance.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={entry.color} />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                        <div className="mt-2 text-xs text-gray-500">
+                          Based on {userReports.length} report{userReports.length !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* My Signal Trend (7 days) */}
+                    {userSignalTrend.some(d => d.signal !== null) && (
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <h4 className="text-xs font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                          <Calendar size={14} />
+                          My Signal Trend (7 Days)
+                        </h4>
+                        <ResponsiveContainer width="100%" height={160}>
+                          <LineChart data={userSignalTrend.filter(d => d.signal !== null)}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                            <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} />
+                            <YAxis stroke="#9ca3af" fontSize={11} />
+                            <Tooltip contentStyle={{
+                              backgroundColor: '#1f2937',
+                              border: '1px solid #374151',
+                              borderRadius: '8px',
+                              color: '#fff'
+                            }} />
+                            <Line type="monotone" dataKey="signal" stroke="#10b981" strokeWidth={2} dot={{ fill: '#10b981', r: 4 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+
+                    {/* Coverage at My Locations */}
+                    {favoriteLocationCoverage.length > 0 && (
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <h4 className="text-xs font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                          <Map size={14} />
+                          Coverage at My Locations
+                        </h4>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {favoriteLocationCoverage.map(fav => (
+                            <div key={fav.id} className="bg-gray-900 rounded p-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                  {fav.type === 'home' && <Home size={12} className="text-blue-400" />}
+                                  {fav.type === 'work' && <Briefcase size={12} className="text-purple-400" />}
+                                  {fav.type === 'custom' && <Star size={12} className="text-yellow-400" />}
+                                  <span className="text-xs font-medium text-white">{fav.name}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-gray-400">Best:</span>
+                                  <span className="text-xs font-semibold" style={{
+                                    color: fav.bestCarrier === 'T-Mobile' ? '#E20074' : 
+                                           fav.bestCarrier === 'Verizon' ? '#CD040B' : '#009FDB'
+                                  }}>
+                                    {fav.bestCarrier}
+                                  </span>
+                                  <span className="text-xs text-gray-500">({fav.bestScore}%)</span>
+                                </div>
+                              </div>
+                              <div className="flex gap-2 text-xs">
+                                {Object.entries(fav.carrierScores).map(([carrier, data]) => (
+                                  <div key={carrier} className="flex items-center gap-1">
+                                    <div className="w-2 h-2 rounded-full" style={{
+                                      backgroundColor: carrier === 'T-Mobile' ? '#E20074' : 
+                                                       carrier === 'Verizon' ? '#CD040B' : '#009FDB'
+                                    }} />
+                                    <span className="text-gray-500">{carrier}:</span>
+                                    <span className="text-gray-400">{data.score}%</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* My Dead Zones */}
+                    {deadZones.length > 0 && (
+                      <div className="bg-gray-800 rounded-lg p-4">
+                        <h4 className="text-xs font-semibold text-gray-400 mb-3 flex items-center gap-2">
+                          <AlertCircle size={14} className="text-red-400" />
+                          My Dead Zones
+                        </h4>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {deadZones.map((zone, idx) => (
+                            <div key={idx} className="bg-gray-900 rounded p-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs font-medium text-red-400">Poor Signal Area</span>
+                                <span className="text-xs text-gray-500" style={{ color: getSignalColor(zone.signal) }}>
+                                  {zone.signal} dBm
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-500">{zone.carrier}</span>
+                                <button
+                                  onClick={() => {
+                                    setMapCenter({ lat: zone.lat, lng: zone.lng });
+                                    setMapZoom(14);
+                                  }}
+                                  className="text-pink-500 hover:text-pink-400 text-xs flex items-center gap-1"
+                                >
+                                  <MapPin size={10} />
+                                  View
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Best Carrier Recommendation */}
+                  {userCarrierPerformance.length > 0 && (
+                    <div className="bg-gradient-to-r from-pink-600/20 to-purple-600/20 border border-pink-500/30 rounded-lg p-4 mb-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Award size={16} className="text-yellow-400" />
+                        <h4 className="text-sm font-semibold text-white">Best Carrier for You</h4>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-2xl font-bold" style={{
+                          color: userCarrierPerformance[0].color
+                        }}>
+                          {userCarrierPerformance[0].carrier}
+                        </div>
+                        <div className="text-sm text-gray-300">
+                          Average: {userCarrierPerformance[0].avgSignal} dBm
+                          <span className="text-gray-500 ml-2">
+                            ({userCarrierPerformance[0].reportCount} reports)
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xs text-gray-400">
+                        Best: {userCarrierPerformance[0].bestSignal} dBm | 
+                        Worst: {userCarrierPerformance[0].worstSignal} dBm
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* General Analytics Section */}
+              <h3 className="text-sm font-semibold text-gray-300 mb-3 flex items-center gap-2">
+                <Activity size={16} className="text-blue-500" />
+                General Network Analytics
+              </h3>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="bg-gray-800 rounded-lg p-4">
                   <h3 className="text-sm font-semibold text-gray-400 mb-3">Towers by Carrier</h3>
