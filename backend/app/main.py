@@ -117,12 +117,15 @@ security = HTTPBearer()
 
 @app.on_event("startup")
 async def startup_db_client():
+    print("[INFO] SignalScope API starting up...")
+    print(f"[INFO] Registered routes: {[route.path for route in app.routes]}")
     try:
         await connect_to_mongo()
     except Exception as e:
         print(f"[WARNING] MongoDB connection failed on startup: {e}")
         print("[INFO] App will continue, but database operations may fail")
         print("[INFO] Connection will be retried on first database request")
+    print("[INFO] SignalScope API startup complete!")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -368,6 +371,19 @@ def root():
 def test():
     """Test endpoint to verify app is running"""
     return {"status": "ok", "message": "API is responding"}
+
+# Debug endpoint to list all routes
+@app.get("/routes")
+def list_routes():
+    """List all registered routes for debugging"""
+    routes = []
+    for route in app.routes:
+        if hasattr(route, 'path') and hasattr(route, 'methods'):
+            routes.append({
+                "path": route.path,
+                "methods": list(route.methods)
+            })
+    return {"routes": routes, "total": len(routes)}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
