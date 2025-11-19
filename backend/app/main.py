@@ -228,8 +228,32 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         headers=headers
     )
 
-# Note: FastAPI's CORSMiddleware handles OPTIONS requests automatically
-# No need for explicit OPTIONS handlers
+# Explicit OPTIONS handler as fallback (CORSMiddleware should handle it, but ensure it works)
+@app.options("/{path:path}")
+async def options_handler(request: Request, path: str):
+    """Handle OPTIONS preflight requests - ensure CORS headers are always present"""
+    origin = request.headers.get("origin")
+    
+    if origin:
+        import re
+        vercel_pattern = r"https://.*\.vercel\.(app|dev)"
+        is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
+        
+        # Always allow Vercel origins or in production
+        if re.match(vercel_pattern, origin) or is_production:
+            return Response(
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": origin,
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Max-Age": "3600"
+                }
+            )
+    
+    # Let CORSMiddleware handle it if origin doesn't match
+    return Response(status_code=200)
 
 # AUTH ENDPOINTS
 @app.post("/auth/register")
