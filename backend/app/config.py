@@ -1,3 +1,4 @@
+import os
 import json
 from pydantic_settings import BaseSettings
 from typing import List
@@ -10,13 +11,24 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
     
     # CORS origins - expects JSON array format: ["http://localhost:5173", "https://signal-scope-psi.vercel.app"]
-    # Pydantic Settings will automatically read from CORS_ORIGINS environment variable
+    # Explicitly read from environment variable as fallback
     cors_origins: str = '["http://localhost:5173"]'
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Explicitly read CORS_ORIGINS from environment if not set by Pydantic
+        env_cors = os.getenv("CORS_ORIGINS")
+        if env_cors:
+            self.cors_origins = env_cors
     
     @property
     def cors_origins_list(self) -> List[str]:
         """Parse CORS_ORIGINS JSON string into list"""
-        cors_value = self.cors_origins.strip()
+        # Get from environment directly as primary source
+        cors_value = os.getenv("CORS_ORIGINS", self.cors_origins).strip()
+        
+        print(f"[CONFIG] CORS_ORIGINS from env: {os.getenv('CORS_ORIGINS')}")
+        print(f"[CONFIG] CORS_ORIGINS raw value: {cors_value}")
         
         # Remove outer quotes if present (Railway might add quotes)
         if cors_value.startswith('"') and cors_value.endswith('"'):
@@ -27,7 +39,7 @@ class Settings(BaseSettings):
         try:
             parsed = json.loads(cors_value)
             if isinstance(parsed, list):
-                print(f"[CONFIG] Parsed CORS_ORIGINS: {parsed}")
+                print(f"[CONFIG] Parsed CORS_ORIGINS successfully: {parsed}")
                 return parsed
             else:
                 # If it's not a list, wrap it
@@ -48,6 +60,5 @@ class Settings(BaseSettings):
         case_sensitive = False
 
 settings = Settings()
-print(f"[CONFIG] CORS_ORIGINS raw value: {settings.cors_origins}")
-print(f"[CONFIG] CORS_ORIGINS parsed list: {settings.cors_origins_list}")
+print(f"[CONFIG] Final CORS_ORIGINS parsed list: {settings.cors_origins_list}")
 
