@@ -56,11 +56,47 @@ async def add_cors_to_all_responses(request: Request, call_next):
         print(f"[MIDDLEWARE START] Is Vercel preview: {is_vercel_preview}")
         print(f"[MIDDLEWARE START] Allowed origins from config: {allowed}")
         
-        # OPTIONS requests are handled by CORSMiddleware above
-        # Just log them here for debugging
+        # Handle OPTIONS preflight requests explicitly as backup
         if method == "OPTIONS":
-            print(f"[CUSTOM MIDDLEWARE] OPTIONS request detected - should be handled by CORSMiddleware")
+            print(f"[CUSTOM MIDDLEWARE] *** OPTIONS REQUEST DETECTED ***")
             print(f"[CUSTOM MIDDLEWARE] Path: {path}, Origin: {origin_header}")
+            
+            # Determine which origin to allow - prioritize Vercel URLs
+            import re
+            vercel_pattern = re.compile(r"https://.*\.vercel\.(app|dev)")
+            
+            if is_vercel_preview or (origin_header and vercel_pattern.match(origin_header)):
+                origin = origin_header  # Allow any Vercel URL
+                print(f"[CUSTOM MIDDLEWARE] Origin matches Vercel pattern, allowing: {origin}")
+            elif origin_header and origin_header in allowed:
+                origin = origin_header
+                print(f"[CUSTOM MIDDLEWARE] Origin matched in allowed list: {origin}")
+            elif allowed:
+                origin = allowed[0]
+                print(f"[CUSTOM MIDDLEWARE] Using first allowed origin: {origin}")
+            else:
+                origin = "*"
+                print(f"[CUSTOM MIDDLEWARE] No specific match, using wildcard: {origin}")
+            
+            headers = {
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "3600",
+            }
+            
+            print(f"[CUSTOM MIDDLEWARE] *** OPTIONS RESPONSE HEADERS ***")
+            for key, value in headers.items():
+                print(f"[CUSTOM MIDDLEWARE]   {key}: {value}")
+            
+            response = Response(
+                status_code=200,
+                headers=headers
+            )
+            
+            print(f"[CUSTOM MIDDLEWARE] *** OPTIONS RESPONSE CREATED AND RETURNING ***")
+            return response
     
         # For all other requests, process normally then add CORS headers
         print(f"[MIDDLEWARE] Processing {method} request normally...")
@@ -69,23 +105,27 @@ async def add_cors_to_all_responses(request: Request, call_next):
         print(f"[MIDDLEWARE] Response received, status: {response.status_code}")
 
         # Determine which origin to allow (same logic as OPTIONS)
-        if origin_header and origin_header in allowed:
+        import re
+        vercel_pattern = re.compile(r"https://.*\.vercel\.(app|dev)")
+        
+        if is_vercel_preview or (origin_header and vercel_pattern.match(origin_header)):
+            origin = origin_header  # Allow any Vercel URL
+        elif origin_header and origin_header in allowed:
             origin = origin_header
-        elif is_vercel_preview:
-            origin = origin_header  # Allow any Vercel preview URL
         elif allowed:
             origin = allowed[0]
         else:
             origin = "*"
 
-        # Always add CORS headers to responses
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, *"
-        response.headers["Access-Control-Expose-Headers"] = "*"
+        # Always add CORS headers to responses (backup if CORSMiddleware didn't add them)
+        if "Access-Control-Allow-Origin" not in response.headers:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, *"
+            response.headers["Access-Control-Expose-Headers"] = "*"
+            print(f"[MIDDLEWARE] Added CORS headers to {method} response: {origin}")
         
-        print(f"[MIDDLEWARE] Added CORS headers to {method} response: {origin}")
         print(f"[MIDDLEWARE END] {method} response sent with CORS headers")
         return response
         
