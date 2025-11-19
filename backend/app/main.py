@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -22,6 +22,30 @@ app = FastAPI(
     description="Network Coverage & Signal Quality Analytics API",
     version="1.0.0"
 )
+
+# Explicit OPTIONS preflight handlers - must be before CORS middleware
+@app.options("/auth/login")
+@app.options("/auth/register")
+async def preflight_handler():
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
+
+@app.options("/{path:path}")
+async def catch_all_options():
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+        }
+    )
 
 # CORS configuration - simple and clean
 # Get CORS origins list (will read from environment)

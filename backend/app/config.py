@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
     
-    # CORS origins - expects JSON array format: ["http://localhost:5173", "https://signal-scope-psi.vercel.app"]
-    # Explicitly read from environment variable as fallback
-    cors_origins: str = '["http://localhost:5173"]'
+    # CORS origins - supports both JSON array format: ["http://localhost:5173"] 
+    # or comma-separated: http://localhost:5173,https://signal-scope-psi.vercel.app
+    cors_origins: str = ""
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -23,12 +23,17 @@ class Settings(BaseSettings):
     
     @property
     def cors_origins_list(self) -> List[str]:
-        """Parse CORS_ORIGINS JSON string into list"""
+        """Parse CORS_ORIGINS - supports both JSON array and comma-separated values"""
         # Get from environment directly as primary source
         cors_value = os.getenv("CORS_ORIGINS", self.cors_origins).strip()
         
         print(f"[CONFIG] CORS_ORIGINS from env: {os.getenv('CORS_ORIGINS')}")
         print(f"[CONFIG] CORS_ORIGINS raw value: {cors_value}")
+        
+        # Empty string returns empty list
+        if not cors_value:
+            print(f"[CONFIG] CORS_ORIGINS is empty, returning empty list")
+            return []
         
         # Remove outer quotes if present (Railway might add quotes)
         if cors_value.startswith('"') and cors_value.endswith('"'):
@@ -36,23 +41,24 @@ class Settings(BaseSettings):
             # Unescape inner quotes
             cors_value = cors_value.replace('\\"', '"')
         
+        # Try parsing as JSON array first (e.g., ["https://example.com"])
         try:
             parsed = json.loads(cors_value)
             if isinstance(parsed, list):
-                print(f"[CONFIG] Parsed CORS_ORIGINS successfully: {parsed}")
+                print(f"[CONFIG] Parsed CORS_ORIGINS as JSON array: {parsed}")
                 return parsed
             else:
                 # If it's not a list, wrap it
                 print(f"[CONFIG] CORS_ORIGINS is not a list, wrapping: {parsed}")
                 return [str(parsed)]
-        except json.JSONDecodeError as e:
-            print(f"[CONFIG] Failed to parse CORS_ORIGINS as JSON: {cors_value}")
-            print(f"[CONFIG] JSON error: {e}")
-            # Fallback: treat as single string or comma-separated
+        except json.JSONDecodeError:
+            # Not JSON, try comma-separated values (e.g., https://example.com,http://localhost:5173)
             if ',' in cors_value:
                 origins = [origin.strip().strip('"').strip("'") for origin in cors_value.split(',')]
-                print(f"[CONFIG] Using comma-separated fallback: {origins}")
+                print(f"[CONFIG] Parsed CORS_ORIGINS as comma-separated: {origins}")
                 return origins
+            # Single value
+            print(f"[CONFIG] Using single CORS_ORIGINS value: {cors_value}")
             return [cors_value]
 
     class Config:
