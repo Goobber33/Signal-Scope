@@ -32,29 +32,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS configuration - must be before routes
-# Get CORS origins from environment or use defaults
-cors_origins = settings.cors_origins_list
-
-# Always add Vercel patterns for production deployment
-vercel_regex = r"https://.*\.vercel\.(app|dev)"
-
-# In production, use regex to allow all Vercel origins
-# Cannot use allow_origins=["*"] with allow_credentials=True
-is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=cors_origins,  # Development origins
-    allow_origin_regex=vercel_regex,  # Allow all Vercel deployments (works in production)
-    allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
-    allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600,
-)
-
 # Custom middleware to ensure CORS headers on ALL responses including errors
+# MUST be added BEFORE CORSMiddleware so it runs first
 class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
     def is_allowed_origin(self, origin: Optional[str]) -> bool:
         """Check if origin is allowed"""
@@ -95,20 +74,28 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
         if request.method == "OPTIONS":
             import re
             vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-            is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
+            is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY") or os.getenv("RAILWAY_ENVIRONMENT_NAME")
             
-            if origin and (re.match(vercel_pattern, origin) or is_production or self.is_allowed_origin(origin)):
-                print(f"[CORS Middleware] Handling OPTIONS for origin: {origin}")
-                return Response(
-                    status_code=200,
-                    headers={
-                        "Access-Control-Allow-Origin": origin,
-                        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-                        "Access-Control-Allow-Headers": "*",
-                        "Access-Control-Allow-Credentials": "true",
-                        "Access-Control-Max-Age": "3600"
-                    }
-                )
+            print(f"[CORS Middleware] OPTIONS request detected from origin: {origin}")
+            print(f"[CORS Middleware] Is production: {is_production}")
+            print(f"[CORS Middleware] Matches Vercel pattern: {re.match(vercel_pattern, origin) if origin else False}")
+            
+            # Always allow if origin is present and matches Vercel or in production
+            if origin:
+                if re.match(vercel_pattern, origin) or is_production:
+                    print(f"[CORS Middleware] Returning CORS headers for origin: {origin}")
+                    return Response(
+                        status_code=200,
+                        headers={
+                            "Access-Control-Allow-Origin": origin,
+                            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+                            "Access-Control-Allow-Headers": "*",
+                            "Access-Control-Allow-Credentials": "true",
+                            "Access-Control-Max-Age": "3600"
+                        }
+                    )
+                else:
+                    print(f"[CORS Middleware] Origin not allowed: {origin}")
         
         try:
             response = await call_next(request)
@@ -152,9 +139,31 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
         
         return response
 
-# Add custom middleware AFTER CORSMiddleware
-# Middleware runs in reverse order, so this will run AFTER CORSMiddleware
-# This ensures CORS headers are added even if CORSMiddleware doesn't handle it
+# CORS configuration - must be before routes
+# Get CORS origins from environment or use defaults
+cors_origins = settings.cors_origins_list
+
+# Always add Vercel patterns for production deployment
+vercel_regex = r"https://.*\.vercel\.(app|dev)"
+
+# In production, use regex to allow all Vercel origins
+# Cannot use allow_origins=["*"] with allow_credentials=True
+is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY") or os.getenv("RAILWAY_ENVIRONMENT_NAME")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,  # Development origins
+    allow_origin_regex=vercel_regex,  # Allow all Vercel deployments (works in production)
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
+)
+
+# Add custom middleware LAST (after CORSMiddleware)
+# Middleware runs in REVERSE order (last added = first executed)
+# So adding this last means it runs FIRST, intercepting OPTIONS before CORSMiddleware
 app.add_middleware(EnsureCORSHeadersMiddleware)
 
 security = HTTPBearer()
