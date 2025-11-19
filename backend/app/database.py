@@ -30,7 +30,22 @@ async def get_database():
 
 async def connect_to_mongo():
     """Create database connection"""
-    db.client = AsyncIOMotorClient(settings.DATABASE_URL)
+    # MongoDB Atlas requires TLS/SSL - ensure it's enabled
+    connection_url = settings.DATABASE_URL
+    # If it's an Atlas connection (mongodb+srv://), ensure TLS is enabled
+    if connection_url.startswith('mongodb+srv://'):
+        # MongoDB Atlas automatically uses TLS, but we can be explicit
+        if 'tls=' not in connection_url and 'ssl=' not in connection_url:
+            # Add tls=true if not present
+            separator = '&' if '?' in connection_url else '?'
+            connection_url = f"{connection_url}{separator}tls=true"
+    
+    db.client = AsyncIOMotorClient(
+        connection_url,
+        tls=True if connection_url.startswith('mongodb+srv://') else None,
+        serverSelectionTimeoutMS=30000,
+        connectTimeoutMS=30000
+    )
     # Test connection
     await db.client.admin.command('ping')
     database_name = get_database_name_from_url(settings.DATABASE_URL) or settings.DATABASE_NAME
