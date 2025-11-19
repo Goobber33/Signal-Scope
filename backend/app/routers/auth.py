@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from datetime import datetime
 
+from ..config import settings
 from ..database import get_database
 from ..schemas import UserCreate, UserLogin, UserResponse, Token
 from ..auth.utils import (
@@ -12,6 +13,20 @@ from ..auth.utils import (
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
+
+
+@router.options("/{path:path}")
+async def options_auth(path: str):
+    origin = settings.cors_origins_list[0] if settings.cors_origins_list else "*"
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
 
 
 @router.post("/register", response_model=Token)
