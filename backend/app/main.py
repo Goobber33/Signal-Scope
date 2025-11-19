@@ -13,30 +13,49 @@ app = FastAPI(title="SignalScope API", version="1.0.0")
 # 1. GLOBAL PRE-FLIGHT OPTIONS HANDLER (runs before CORS middleware)
 # --------------------------------------------------------------------
 @app.options("/{full_path:path}")
-async def global_options(full_path: str, request: Request):
-    origin_header = request.headers.get("origin", "")
-    allowed = settings.cors_origins_list
+async def global_options(request: Request, full_path: str = ""):
+    try:
+        origin_header = request.headers.get("origin", "")
+        allowed = settings.cors_origins_list
 
-    # Decide which origin to return
-    if origin_header and origin_header in allowed:
-        origin = origin_header
-    elif allowed:
-        origin = allowed[0]
-    else:
-        origin = "*"
+        # Decide which origin to return
+        if origin_header and origin_header in allowed:
+            origin = origin_header
+        elif allowed:
+            origin = allowed[0]
+        else:
+            origin = "*"
 
-    print(f"[OPTIONS] path={full_path} origin={origin_header} -> allowed={origin}")
+        print(f"[OPTIONS] path={full_path} origin={origin_header} -> allowed={origin} | allowed_list={allowed}")
 
-    return Response(
-        status_code=200,
-        headers={
+        headers = {
             "Access-Control-Allow-Origin": origin,
             "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
             "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Max-Age": "3600",
         }
-    )
+        
+        print(f"[OPTIONS] Returning headers: {headers}")
+        
+        return Response(
+            status_code=200,
+            headers=headers
+        )
+    except Exception as e:
+        print(f"[OPTIONS ERROR] {e}")
+        import traceback
+        traceback.print_exc()
+        # Return a fallback response even on error
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Credentials": "true",
+            }
+        )
 
 
 # --------------------------------------------------------------------
