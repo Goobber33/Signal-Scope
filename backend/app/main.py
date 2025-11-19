@@ -57,8 +57,14 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
         if not origin:
             return False
         
-        # In production, allow all origins (Vercel deployments vary)
-        if os.getenv("ENVIRONMENT") == "production" or os.getenv("VERCEL") == "1":
+        # In production (Railway), allow all Vercel origins
+        if os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY"):
+            # Check if it's a Vercel origin
+            import re
+            vercel_pattern = r"https://.*\.vercel\.(app|dev)"
+            if re.match(vercel_pattern, origin):
+                return True
+            # In production, be permissive
             return True
         
         # For development, check specific origins
@@ -66,11 +72,11 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
         if "*" in allowed_origins:
             return True
         
-        # Check exact match or Vercel pattern
+        # Check exact match
         if origin in allowed_origins:
             return True
         
-        # Check Vercel pattern
+        # Check Vercel pattern (for development with Vercel preview)
         import re
         vercel_pattern = r"https://.*\.vercel\.(app|dev)"
         if re.match(vercel_pattern, origin):
@@ -100,13 +106,21 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
             )
             return response
         
-        # Add CORS headers to all successful responses
+        # Add CORS headers to all successful responses (including OPTIONS)
         if self.is_allowed_origin(origin):
             response.headers["Access-Control-Allow-Origin"] = origin or "*"
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
             response.headers["Access-Control-Allow-Headers"] = "*"
             response.headers["Access-Control-Expose-Headers"] = "*"
+        elif origin:  # Always allow if origin is present in production
+            # Fallback: allow any origin in production for Vercel
+            if os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") == "production":
+                response.headers["Access-Control-Allow-Origin"] = origin
+                response.headers["Access-Control-Allow-Credentials"] = "true"
+                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
+                response.headers["Access-Control-Allow-Headers"] = "*"
+                response.headers["Access-Control-Expose-Headers"] = "*"
         
         return response
 
@@ -204,11 +218,38 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         headers=headers
     )
 
-# CORS preflight handlers
+# CORS preflight handlers - must return proper CORS headers
 @app.options("/auth/register")
 @app.options("/auth/login")
-async def options_handler():
-    return Response(status_code=200)
+@app.options("/{path:path}")
+async def options_handler(request: Request, path: str = ""):
+    """Handle CORS preflight requests - always allow in production"""
+    origin = request.headers.get("origin")
+    
+    # In production, always allow Vercel origins
+    import re
+    vercel_pattern = r"https://.*\.vercel\.(app|dev)"
+    is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
+    
+    if origin and (is_production or re.match(vercel_pattern, origin) or origin in settings.cors_origins_list):
+        headers = {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "3600"
+        }
+    else:
+        # Fallback - let CORS middleware handle it
+        headers = {
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "3600"
+        }
+        if origin:
+            headers["Access-Control-Allow-Origin"] = origin
+    
+    return Response(status_code=200, headers=headers)
 
 # AUTH ENDPOINTS
 @app.post("/auth/register")

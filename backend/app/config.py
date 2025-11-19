@@ -19,12 +19,8 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> List[str]:
         """Parse CORS_ORIGINS string into list, including wildcard for Vercel"""
         origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
-        # Add common Vercel patterns
-        if os.getenv("ENVIRONMENT") == "production":
-            origins.extend([
-                "https://*.vercel.app",
-                "https://*.vercel.dev",
-            ])
+        # In production, allow all Vercel origins via regex (handled by allow_origin_regex)
+        # Don't add wildcard patterns to the list as FastAPI doesn't support them directly
         return origins
 
     class Config:
