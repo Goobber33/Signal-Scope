@@ -225,5 +225,18 @@ def list_routes():
             })
     return {"routes": routes, "total": len(routes)}
 
+# Debug endpoint to check CORS configuration
+@app.get("/debug/cors")
+def debug_cors():
+    """Debug endpoint to check CORS configuration"""
+    import os
+    env_value = os.getenv("CORS_ORIGINS", "NOT SET")
+    return {
+        "cors_origins_raw": settings.cors_origins,
+        "cors_origins_list": settings.cors_origins_list,
+        "env_CORS_ORIGINS": env_value,
+        "env_length": len(env_value) if env_value != "NOT SET" else 0
+    }
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
