@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, Request
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from datetime import datetime
-
-from ..config import settings
 from ..database import get_database
 from ..schemas import UserCreate, UserLogin, UserResponse, Token
 from ..auth.utils import (
@@ -13,34 +11,6 @@ from ..auth.utils import (
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 security = HTTPBearer()
-
-
-@router.options("/{path:path}")
-async def options_auth(request: Request, path: str = ""):
-    # Get origin from request header
-    origin_header = request.headers.get("origin", "")
-    allowed_origins = settings.cors_origins_list
-    
-    # Use request origin if it's in allowed list, otherwise use first allowed origin
-    if origin_header and origin_header in allowed_origins:
-        origin = origin_header
-    elif allowed_origins:
-        origin = allowed_origins[0]
-    else:
-        origin = "*"
-    
-    print(f"[OPTIONS] Path: {path}, Origin: {origin_header}, Allowed: {origin}")
-    
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "3600",
-        }
-    )
 
 
 @router.post("/register", response_model=Token)
