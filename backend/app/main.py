@@ -90,6 +90,26 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
     
     async def dispatch(self, request: Request, call_next):
         origin = request.headers.get("origin")
+        
+        # Handle OPTIONS requests directly in middleware to ensure CORS headers
+        if request.method == "OPTIONS":
+            import re
+            vercel_pattern = r"https://.*\.vercel\.(app|dev)"
+            is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
+            
+            if origin and (re.match(vercel_pattern, origin) or is_production or self.is_allowed_origin(origin)):
+                print(f"[CORS Middleware] Handling OPTIONS for origin: {origin}")
+                return Response(
+                    status_code=200,
+                    headers={
+                        "Access-Control-Allow-Origin": origin,
+                        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+                        "Access-Control-Allow-Headers": "*",
+                        "Access-Control-Allow-Credentials": "true",
+                        "Access-Control-Max-Age": "3600"
+                    }
+                )
+        
         try:
             response = await call_next(request)
         except Exception as exc:
