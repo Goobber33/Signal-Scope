@@ -228,31 +228,66 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         headers=headers
     )
 
-# Explicit OPTIONS handler as fallback (CORSMiddleware should handle it, but ensure it works)
+# Explicit OPTIONS handlers for auth endpoints (must be before POST routes)
+@app.options("/auth/login")
+@app.options("/auth/register")
+async def auth_options_handler(request: Request):
+    """Handle OPTIONS preflight for auth endpoints"""
+    origin = request.headers.get("origin", "")
+    print(f"[CORS] OPTIONS request from origin: {origin}")
+    
+    import re
+    vercel_pattern = r"https://.*\.vercel\.(app|dev)"
+    is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
+    
+    print(f"[CORS] Is production: {is_production}, Matches Vercel: {re.match(vercel_pattern, origin) if origin else False}")
+    
+    # Always allow Vercel origins or in production
+    if origin and (re.match(vercel_pattern, origin) or is_production):
+        headers = {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "3600"
+        }
+        print(f"[CORS] Returning headers: {headers}")
+        return Response(status_code=200, headers=headers)
+    
+    # Fallback - return basic headers
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": origin or "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
+# Catch-all OPTIONS handler for other routes
 @app.options("/{path:path}")
 async def options_handler(request: Request, path: str):
-    """Handle OPTIONS preflight requests - ensure CORS headers are always present"""
-    origin = request.headers.get("origin")
+    """Handle OPTIONS preflight for all other routes"""
+    origin = request.headers.get("origin", "")
     
-    if origin:
-        import re
-        vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-        is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
-        
-        # Always allow Vercel origins or in production
-        if re.match(vercel_pattern, origin) or is_production:
-            return Response(
-                status_code=200,
-                headers={
-                    "Access-Control-Allow-Origin": origin,
-                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-                    "Access-Control-Allow-Headers": "*",
-                    "Access-Control-Allow-Credentials": "true",
-                    "Access-Control-Max-Age": "3600"
-                }
-            )
+    import re
+    vercel_pattern = r"https://.*\.vercel\.(app|dev)"
+    is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
     
-    # Let CORSMiddleware handle it if origin doesn't match
+    if origin and (re.match(vercel_pattern, origin) or is_production):
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": origin,
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "3600"
+            }
+        )
+    
     return Response(status_code=200)
 
 # AUTH ENDPOINTS
