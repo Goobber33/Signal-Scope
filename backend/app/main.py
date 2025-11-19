@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import connect_to_mongo, close_mongo_connection
@@ -9,58 +10,27 @@ app = FastAPI(title="SignalScope API", version="1.0.0")
 
 
 # --------------------------------------------------------------------
-# 1. GLOBAL PRE-FLIGHT OPTIONS HANDLER (MUST be before any middleware)
+# 1. CORS MIDDLEWARE WITH REGEX FOR VERCEL
 # --------------------------------------------------------------------
-@app.options("/{full_path:path}")
-async def global_options(full_path: str, request: Request):
-    """Handle all OPTIONS preflight requests"""
-    try:
-        origin_header = request.headers.get("origin", "")
-        allowed = settings.cors_origins_list
+# Allow all Vercel URLs (production and previews)
+vercel_regex = r"https://.*\.vercel\.(app|dev)"
 
-        # Determine which origin to allow
-        if origin_header and origin_header in allowed:
-            origin = origin_header
-        elif allowed:
-            origin = allowed[0]
-        else:
-            origin = "*"
+# Get specific allowed origins from config
+allowed_origins = [origin for origin in settings.cors_origins_list if "*" not in origin]
 
-        print(f"[OPTIONS HANDLER] Path: /{full_path} | Origin: {origin_header} | Allowed origins: {allowed} | Returning: {origin}")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins if allowed_origins else [],  # Specific origins
+    allow_origin_regex=vercel_regex,  # Allow all Vercel URLs via regex
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
+)
 
-        headers = {
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "3600",
-        }
-        
-        print(f"[OPTIONS HANDLER] Response headers: {headers}")
-        
-        response = Response(
-            status_code=200,
-            headers=headers
-        )
-        
-        print(f"[OPTIONS HANDLER] Response created, returning")
-        return response
-        
-    except Exception as e:
-        print(f"[OPTIONS HANDLER ERROR] {e}")
-        import traceback
-        traceback.print_exc()
-        # Fallback response even on error
-        return Response(
-            status_code=200,
-            headers={
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Max-Age": "3600",
-            }
-        )
+print(f"[CORS SETUP] Allowed origins: {allowed_origins}")
+print(f"[CORS SETUP] Vercel regex: {vercel_regex}")
 
 
 # --------------------------------------------------------------------
@@ -86,47 +56,11 @@ async def add_cors_to_all_responses(request: Request, call_next):
         print(f"[MIDDLEWARE START] Is Vercel preview: {is_vercel_preview}")
         print(f"[MIDDLEWARE START] Allowed origins from config: {allowed}")
         
-        # Handle OPTIONS preflight requests
+        # OPTIONS requests are handled by CORSMiddleware above
+        # Just log them here for debugging
         if method == "OPTIONS":
-            print(f"[CORS MIDDLEWARE] *** OPTIONS REQUEST DETECTED ***")
-            print(f"[CORS MIDDLEWARE] Path: {path}")
-            print(f"[CORS MIDDLEWARE] Origin: {origin_header}")
-            
-            # Determine which origin to allow
-            # Allow if exact match, Vercel preview, or first in allowed list
-            if origin_header and origin_header in allowed:
-                origin = origin_header
-                print(f"[CORS MIDDLEWARE] Origin matched exactly in allowed list")
-            elif is_vercel_preview:
-                origin = origin_header  # Allow any Vercel preview URL
-                print(f"[CORS MIDDLEWARE] Origin is Vercel preview, allowing: {origin}")
-            elif allowed:
-                origin = allowed[0]
-                print(f"[CORS MIDDLEWARE] Using first allowed origin: {origin}")
-            else:
-                origin = "*"
-                print(f"[CORS MIDDLEWARE] No allowed origins, using wildcard: {origin}")
-
-            headers = {
-                "Access-Control-Allow-Origin": origin,
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-                "Access-Control-Allow-Headers": "Content-Type, Authorization, *",
-                "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Max-Age": "3600",
-            }
-            
-            print(f"[CORS MIDDLEWARE] *** OPTIONS RESPONSE HEADERS ***")
-            for key, value in headers.items():
-                print(f"[CORS MIDDLEWARE]   {key}: {value}")
-            
-            response = Response(
-                status_code=200,
-                headers=headers
-            )
-            
-            print(f"[CORS MIDDLEWARE] *** OPTIONS RESPONSE CREATED AND RETURNING ***")
-            print(f"[MIDDLEWARE END] OPTIONS response sent")
-            return response
+            print(f"[CUSTOM MIDDLEWARE] OPTIONS request detected - should be handled by CORSMiddleware")
+            print(f"[CUSTOM MIDDLEWARE] Path: {path}, Origin: {origin_header}")
     
         # For all other requests, process normally then add CORS headers
         print(f"[MIDDLEWARE] Processing {method} request normally...")
