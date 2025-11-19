@@ -10,15 +10,16 @@ app = FastAPI(title="SignalScope API", version="1.0.0")
 
 
 # --------------------------------------------------------------------
-# 1. GLOBAL PRE-FLIGHT OPTIONS HANDLER (runs before CORS middleware)
+# 1. GLOBAL PRE-FLIGHT OPTIONS HANDLER (MUST be before any middleware)
 # --------------------------------------------------------------------
 @app.options("/{full_path:path}")
-async def global_options(request: Request, full_path: str = ""):
+async def global_options(full_path: str, request: Request):
+    """Handle all OPTIONS preflight requests"""
     try:
         origin_header = request.headers.get("origin", "")
         allowed = settings.cors_origins_list
 
-        # Decide which origin to return
+        # Determine which origin to allow
         if origin_header and origin_header in allowed:
             origin = origin_header
         elif allowed:
@@ -26,7 +27,7 @@ async def global_options(request: Request, full_path: str = ""):
         else:
             origin = "*"
 
-        print(f"[OPTIONS] path={full_path} origin={origin_header} -> allowed={origin} | allowed_list={allowed}")
+        print(f"[OPTIONS HANDLER] Path: /{full_path} | Origin: {origin_header} | Allowed origins: {allowed} | Returning: {origin}")
 
         headers = {
             "Access-Control-Allow-Origin": origin,
@@ -36,17 +37,21 @@ async def global_options(request: Request, full_path: str = ""):
             "Access-Control-Max-Age": "3600",
         }
         
-        print(f"[OPTIONS] Returning headers: {headers}")
+        print(f"[OPTIONS HANDLER] Response headers: {headers}")
         
-        return Response(
+        response = Response(
             status_code=200,
             headers=headers
         )
+        
+        print(f"[OPTIONS HANDLER] Response created, returning")
+        return response
+        
     except Exception as e:
-        print(f"[OPTIONS ERROR] {e}")
+        print(f"[OPTIONS HANDLER ERROR] {e}")
         import traceback
         traceback.print_exc()
-        # Return a fallback response even on error
+        # Fallback response even on error
         return Response(
             status_code=200,
             headers={
@@ -54,6 +59,7 @@ async def global_options(request: Request, full_path: str = ""):
                 "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
                 "Access-Control-Allow-Headers": "*",
                 "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "3600",
             }
         )
 
@@ -71,11 +77,17 @@ app.add_middleware(
 
 
 # --------------------------------------------------------------------
-# 3. FORCE CORS ON *EVERY* RESPONSE (the real fix for Railway)
+# 3. FORCE CORS ON *EVERY* RESPONSE (backup in case OPTIONS handler misses)
 # --------------------------------------------------------------------
 @app.middleware("http")
 async def add_cors_to_all_responses(request: Request, call_next):
+    """Add CORS headers to all responses as a safety net"""
     response = await call_next(request)
+
+    # Skip if this is an OPTIONS request (handled by explicit handler above)
+    if request.method == "OPTIONS":
+        print(f"[CORS MIDDLEWARE] OPTIONS request detected, headers should already be set")
+        return response
 
     origin_header = request.headers.get("origin", "")
     allowed = settings.cors_origins_list
@@ -88,12 +100,14 @@ async def add_cors_to_all_responses(request: Request, call_next):
     else:
         origin = "*"
 
-    # Inject CORS headers on ALL responses
-    response.headers["Access-Control-Allow-Origin"] = origin
-    response.headers["Access-Control-Allow-Credentials"] = "true"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, *"
-    response.headers["Access-Control-Expose-Headers"] = "*"
+    # Inject CORS headers on ALL responses (backup for non-OPTIONS)
+    if "Access-Control-Allow-Origin" not in response.headers:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, *"
+        response.headers["Access-Control-Expose-Headers"] = "*"
+        print(f"[CORS MIDDLEWARE] Added CORS headers to {request.method} {request.url.path}: {origin}")
 
     return response
 
