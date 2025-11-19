@@ -74,16 +74,39 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
         if request.method == "OPTIONS":
             import re
             vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-            is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY") or os.getenv("RAILWAY_ENVIRONMENT_NAME")
+            is_production = (
+                os.getenv("ENVIRONMENT") == "production" or 
+                os.getenv("RAILWAY_ENVIRONMENT") or 
+                os.getenv("RAILWAY") or 
+                os.getenv("RAILWAY_ENVIRONMENT_NAME") or
+                os.getenv("NODE_ENV") == "production" or
+                "railway" in os.getenv("HOSTNAME", "").lower()
+            )
             
             print(f"[CORS Middleware] OPTIONS request detected from origin: {origin}")
             print(f"[CORS Middleware] Is production: {is_production}")
-            print(f"[CORS Middleware] Matches Vercel pattern: {re.match(vercel_pattern, origin) if origin else False}")
+            print(f"[CORS Middleware] Request path: {request.url.path}")
             
-            # Always allow if origin is present and matches Vercel or in production
+            # ALWAYS allow OPTIONS requests with CORS headers if origin is present
+            # This ensures preflight always succeeds
             if origin:
-                if re.match(vercel_pattern, origin) or is_production:
-                    print(f"[CORS Middleware] Returning CORS headers for origin: {origin}")
+                matches_vercel = bool(re.match(vercel_pattern, origin))
+                print(f"[CORS Middleware] Matches Vercel pattern: {matches_vercel}")
+                
+                # Always return CORS headers for any origin in production or Vercel origins
+                if matches_vercel or is_production:
+                    headers = {
+                        "Access-Control-Allow-Origin": origin,
+                        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
+                        "Access-Control-Allow-Headers": "*",
+                        "Access-Control-Allow-Credentials": "true",
+                        "Access-Control-Max-Age": "3600"
+                    }
+                    print(f"[CORS Middleware] Returning CORS headers: {headers}")
+                    return Response(status_code=200, headers=headers)
+                else:
+                    # Even if not production, allow Vercel origins
+                    print(f"[CORS Middleware] Origin not in production/Vercel, but allowing anyway: {origin}")
                     return Response(
                         status_code=200,
                         headers={
@@ -94,8 +117,8 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
                             "Access-Control-Max-Age": "3600"
                         }
                     )
-                else:
-                    print(f"[CORS Middleware] Origin not allowed: {origin}")
+            else:
+                print(f"[CORS Middleware] No origin header in OPTIONS request")
         
         try:
             response = await call_next(request)
@@ -148,7 +171,18 @@ vercel_regex = r"https://.*\.vercel\.(app|dev)"
 
 # In production, use regex to allow all Vercel origins
 # Cannot use allow_origins=["*"] with allow_credentials=True
-is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY") or os.getenv("RAILWAY_ENVIRONMENT_NAME")
+# Check multiple Railway environment variables
+is_production = (
+    os.getenv("ENVIRONMENT") == "production" or 
+    os.getenv("RAILWAY_ENVIRONMENT") or 
+    os.getenv("RAILWAY") or 
+    os.getenv("RAILWAY_ENVIRONMENT_NAME") or
+    os.getenv("NODE_ENV") == "production" or
+    "railway" in os.getenv("HOSTNAME", "").lower()
+)
+
+print(f"[CORS Config] Production mode: {is_production}")
+print(f"[CORS Config] Railway env vars: RAILWAY={os.getenv('RAILWAY')}, RAILWAY_ENVIRONMENT={os.getenv('RAILWAY_ENVIRONMENT')}")
 
 app.add_middleware(
     CORSMiddleware,
