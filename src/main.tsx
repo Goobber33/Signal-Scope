@@ -49,6 +49,7 @@ mediaQuery.addEventListener('change', forceLightMode);
 
 import { createRoot } from 'react-dom/client';
 import './index.css';
+import 'leaflet/dist/leaflet.css';
 import App from './App.tsx';
 import { RootDnd } from './dnd-kit/RootDnd.tsx';
 import { DragStateProvider } from './dnd-kit/DragStateContext.tsx';
