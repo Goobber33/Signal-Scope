@@ -1,4 +1,5 @@
 import os
+import json
 from pydantic_settings import BaseSettings
 from typing import List
 
@@ -9,19 +10,16 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080
     
-    # CORS origins - supports comma-separated list or default localhost
-    CORS_ORIGINS: str = os.getenv(
-        "CORS_ORIGINS",
-        "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173,http://127.0.0.1:3000"
-    )
+    # CORS origins - expects JSON array format: ["http://localhost:5173", "https://signal-scope-psi.vercel.app"]
+    cors_origins: str = os.getenv("CORS_ORIGINS", '["http://localhost:5173"]')
     
     @property
     def cors_origins_list(self) -> List[str]:
-        """Parse CORS_ORIGINS string into list, including wildcard for Vercel"""
-        origins = [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
-        # In production, allow all Vercel origins via regex (handled by allow_origin_regex)
-        # Don't add wildcard patterns to the list as FastAPI doesn't support them directly
-        return origins
+        """Parse CORS_ORIGINS JSON string into list"""
+        try:
+            return json.loads(self.cors_origins)
+        except:
+            return [self.cors_origins]
 
     class Config:
         env_file = ".env"

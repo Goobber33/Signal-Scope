@@ -1,18 +1,10 @@
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List, Optional
 from datetime import datetime
-from bson import ObjectId
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
 import uvicorn
-import traceback
-import os
 
 from .database import get_database, connect_to_mongo, close_mongo_connection
 from .config import settings
@@ -24,7 +16,6 @@ from .auth.utils import (
     get_password_hash, verify_password, 
     create_access_token, verify_token
 )
-from .utils.haversine import haversine_distance, estimate_signal_strength
 
 app = FastAPI(
     title="SignalScope API",
@@ -32,180 +23,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Custom middleware to ensure CORS headers on ALL responses including errors
-# MUST be added BEFORE CORSMiddleware so it runs first
-class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
-    def is_allowed_origin(self, origin: Optional[str]) -> bool:
-        """Check if origin is allowed"""
-        if not origin:
-            return False
-        
-        # In production (Railway), allow all Vercel origins
-        if os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY"):
-            # Check if it's a Vercel origin
-            import re
-            vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-            if re.match(vercel_pattern, origin):
-                return True
-            # In production, be permissive
-            return True
-        
-        # For development, check specific origins
-        allowed_origins = settings.cors_origins_list
-        if "*" in allowed_origins:
-            return True
-        
-        # Check exact match
-        if origin in allowed_origins:
-            return True
-        
-        # Check Vercel pattern (for development with Vercel preview)
-        import re
-        vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-        if re.match(vercel_pattern, origin):
-            return True
-        
-        return False
-    
-    async def dispatch(self, request: Request, call_next):
-        origin = request.headers.get("origin")
-        
-        # Handle OPTIONS requests directly in middleware to ensure CORS headers
-        if request.method == "OPTIONS":
-            import re
-            vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-            is_production = (
-                os.getenv("ENVIRONMENT") == "production" or 
-                os.getenv("RAILWAY_ENVIRONMENT") or 
-                os.getenv("RAILWAY") or 
-                os.getenv("RAILWAY_ENVIRONMENT_NAME") or
-                os.getenv("NODE_ENV") == "production" or
-                "railway" in os.getenv("HOSTNAME", "").lower()
-            )
-            
-            print(f"[CORS Middleware] OPTIONS request detected from origin: {origin}")
-            print(f"[CORS Middleware] Is production: {is_production}")
-            print(f"[CORS Middleware] Request path: {request.url.path}")
-            
-            # ALWAYS allow OPTIONS requests with CORS headers if origin is present
-            # This ensures preflight always succeeds
-            if origin:
-                matches_vercel = bool(re.match(vercel_pattern, origin))
-                print(f"[CORS Middleware] Matches Vercel pattern: {matches_vercel}")
-                
-                # Always return CORS headers for any origin in production or Vercel origins
-                if matches_vercel or is_production:
-                    headers = {
-                        "Access-Control-Allow-Origin": origin,
-                        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-                        "Access-Control-Allow-Headers": "*",
-                        "Access-Control-Allow-Credentials": "true",
-                        "Access-Control-Max-Age": "3600"
-                    }
-                    print(f"[CORS Middleware] Returning CORS headers: {headers}")
-                    return Response(status_code=200, headers=headers)
-                else:
-                    # Even if not production, allow Vercel origins
-                    print(f"[CORS Middleware] Origin not in production/Vercel, but allowing anyway: {origin}")
-                    return Response(
-                        status_code=200,
-                        headers={
-                            "Access-Control-Allow-Origin": origin,
-                            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-                            "Access-Control-Allow-Headers": "*",
-                            "Access-Control-Allow-Credentials": "true",
-                            "Access-Control-Max-Age": "3600"
-                        }
-                    )
-            else:
-                print(f"[CORS Middleware] No origin header in OPTIONS request")
-        
-        try:
-            response = await call_next(request)
-        except Exception as exc:
-            # Handle any exception and create response with CORS headers
-            headers = {}
-            if self.is_allowed_origin(origin):
-                headers["Access-Control-Allow-Origin"] = origin or "*"
-                headers["Access-Control-Allow-Credentials"] = "true"
-                headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
-                headers["Access-Control-Allow-Headers"] = "*"
-                headers["Access-Control-Expose-Headers"] = "*"
-            print(f"Error in middleware: {exc}")
-            print(traceback.format_exc())
-            response = JSONResponse(
-                {"detail": f"Internal server error: {str(exc)}"},
-                status_code=500,
-                headers=headers
-            )
-            return response
-        
-        # Always add CORS headers if origin is present (especially for Vercel)
-        if origin:
-            import re
-            vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-            is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
-            
-            # Allow if it's a Vercel origin or in production
-            if re.match(vercel_pattern, origin) or is_production or self.is_allowed_origin(origin):
-                # Ensure CORS headers are set (CORSMiddleware should have set them, but ensure they're there)
-                if "Access-Control-Allow-Origin" not in response.headers:
-                    response.headers["Access-Control-Allow-Origin"] = origin
-                if "Access-Control-Allow-Credentials" not in response.headers:
-                    response.headers["Access-Control-Allow-Credentials"] = "true"
-                if "Access-Control-Allow-Methods" not in response.headers:
-                    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
-                if "Access-Control-Allow-Headers" not in response.headers:
-                    response.headers["Access-Control-Allow-Headers"] = "*"
-                if "Access-Control-Expose-Headers" not in response.headers:
-                    response.headers["Access-Control-Expose-Headers"] = "*"
-        
-        return response
-
-# CORS configuration - must be before routes
-# Get CORS origins from environment or use defaults
-cors_origins = settings.cors_origins_list
-
-# Always add Vercel patterns for production deployment
-vercel_regex = r"https://.*\.vercel\.(app|dev)"
-
-# In production, use regex to allow all Vercel origins
-# Cannot use allow_origins=["*"] with allow_credentials=True
-# Check multiple Railway environment variables
-is_production = (
-    os.getenv("ENVIRONMENT") == "production" or 
-    os.getenv("RAILWAY_ENVIRONMENT") or 
-    os.getenv("RAILWAY") or 
-    os.getenv("RAILWAY_ENVIRONMENT_NAME") or
-    os.getenv("NODE_ENV") == "production" or
-    "railway" in os.getenv("HOSTNAME", "").lower()
-)
-
-print(f"[CORS Config] Production mode: {is_production}")
-print(f"[CORS Config] Railway env vars: RAILWAY={os.getenv('RAILWAY')}, RAILWAY_ENVIRONMENT={os.getenv('RAILWAY_ENVIRONMENT')}")
-
+# CORS configuration - simple and clean
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,  # Development origins
-    allow_origin_regex=vercel_regex,  # Allow all Vercel deployments (works in production)
+    allow_origins=settings.cors_origins_list,   # comes from CORS_ORIGINS env variable
     allow_credentials=True,
-    allow_methods=["*"],  # Allow all methods
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600,
 )
-
-# Add custom middleware LAST (after CORSMiddleware)
-# Middleware runs in REVERSE order (last added = first executed)
-# So adding this last means it runs FIRST, intercepting OPTIONS before CORSMiddleware
-app.add_middleware(EnsureCORSHeadersMiddleware)
 
 security = HTTPBearer()
 
 @app.on_event("startup")
 async def startup_db_client():
     print("[INFO] SignalScope API starting up...")
-    print(f"[INFO] Registered routes: {[route.path for route in app.routes]}")
+    print(f"[INFO] CORS origins: {settings.cors_origins_list}")
     try:
         await connect_to_mongo()
     except Exception as e:
@@ -217,141 +49,6 @@ async def startup_db_client():
 @app.on_event("shutdown")
 async def shutdown_db_client():
     await close_mongo_connection()
-
-# Exception handlers to ensure CORS headers on all responses
-def add_cors_headers(response: JSONResponse, origin: str = None) -> JSONResponse:
-    """Add CORS headers to a response"""
-    allowed_origins = ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]
-    if origin and origin in allowed_origins:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-        response.headers["Access-Control-Expose-Headers"] = "*"
-    return response
-
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exc: HTTPException):
-    origin = request.headers.get("origin")
-    headers = dict(exc.headers) if exc.headers else {}
-    
-    # Add CORS headers
-    if origin:
-        headers["Access-Control-Allow-Origin"] = origin
-        headers["Access-Control-Allow-Credentials"] = "true"
-        headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
-        headers["Access-Control-Allow-Headers"] = "*"
-        headers["Access-Control-Expose-Headers"] = "*"
-    
-    return JSONResponse(
-        {"detail": exc.detail},
-        status_code=exc.status_code,
-        headers=headers
-    )
-
-@app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    origin = request.headers.get("origin")
-    headers = {}
-    
-    # Add CORS headers
-    if origin:
-        headers["Access-Control-Allow-Origin"] = origin
-        headers["Access-Control-Allow-Credentials"] = "true"
-        headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
-        headers["Access-Control-Allow-Headers"] = "*"
-        headers["Access-Control-Expose-Headers"] = "*"
-    
-    # Log error
-    print(f"Unhandled error: {exc}")
-    print(traceback.format_exc())
-    
-    return JSONResponse(
-        {"detail": f"Internal server error: {str(exc)}"},
-        status_code=500,
-        headers=headers
-    )
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    origin = request.headers.get("origin")
-    headers = {}
-    
-    # Add CORS headers
-    if origin:
-        headers["Access-Control-Allow-Origin"] = origin
-        headers["Access-Control-Allow-Credentials"] = "true"
-        headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
-        headers["Access-Control-Allow-Headers"] = "*"
-        headers["Access-Control-Expose-Headers"] = "*"
-    
-    return JSONResponse(
-        {"detail": exc.errors(), "body": exc.body},
-        status_code=422,
-        headers=headers
-    )
-
-# Explicit OPTIONS handlers for auth endpoints (must be before POST routes)
-@app.options("/auth/login")
-@app.options("/auth/register")
-async def auth_options_handler(request: Request):
-    """Handle OPTIONS preflight for auth endpoints"""
-    origin = request.headers.get("origin", "")
-    print(f"[CORS] OPTIONS request from origin: {origin}")
-    
-    import re
-    vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-    is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
-    
-    print(f"[CORS] Is production: {is_production}, Matches Vercel: {re.match(vercel_pattern, origin) if origin else False}")
-    
-    # Always allow Vercel origins or in production
-    if origin and (re.match(vercel_pattern, origin) or is_production):
-        headers = {
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "3600"
-        }
-        print(f"[CORS] Returning headers: {headers}")
-        return Response(status_code=200, headers=headers)
-    
-    # Fallback - return basic headers
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": origin or "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-            "Access-Control-Allow-Headers": "*",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "3600"
-        }
-    )
-
-# Catch-all OPTIONS handler for other routes
-@app.options("/{path:path}")
-async def options_handler(request: Request, path: str):
-    """Handle OPTIONS preflight for all other routes"""
-    origin = request.headers.get("origin", "")
-    
-    import re
-    vercel_pattern = r"https://.*\.vercel\.(app|dev)"
-    is_production = os.getenv("ENVIRONMENT") == "production" or os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("RAILWAY")
-    
-    if origin and (re.match(vercel_pattern, origin) or is_production):
-        return Response(
-            status_code=200,
-            headers={
-                "Access-Control-Allow-Origin": origin,
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Max-Age": "3600"
-            }
-        )
-    
-    return Response(status_code=200)
 
 # AUTH ENDPOINTS
 @app.post("/auth/register")
