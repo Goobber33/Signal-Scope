@@ -1,0 +1,22 @@
+# Backend files (deploy separately)
+backend/
+venv/
+
+# Development files
+.env
+.env.local
+*.log
+
+# Build artifacts
+dist/
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+.idea/

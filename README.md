@@ -279,6 +279,50 @@ uvicorn app.main:app --reload    # Start with auto-reload
 python seed_towers.py            # Seed database
 ```
 
+## 🚀 Deployment
+
+SignalScope is ready for production deployment!
+
+### Frontend Deployment (Vercel)
+
+1. **Push to GitHub** (if not already done)
+2. **Go to [vercel.com](https://vercel.com)** → Import Project
+3. **Select your repository**
+4. **Set Environment Variable**: `VITE_API_URL` = Your backend URL
+5. **Deploy!**
+
+See **[VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md)** for detailed instructions.
+
+### Backend Deployment
+
+Deploy your FastAPI backend to:
+- **Railway** (Recommended - Easiest)
+- **Render** (Free tier available)
+- **Fly.io** (Great for Python apps)
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for complete deployment guide.
+
+### Quick Deploy Checklist
+
+- [ ] Backend deployed (Railway/Render)
+- [ ] Frontend deployed (Vercel)
+- [ ] Environment variables set
+- [ ] CORS configured for production
+- [ ] MongoDB Atlas connection string updated
+- [ ] Test registration/login flow
+
+### Environment Variables
+
+**Frontend (Vercel):**
+- `VITE_API_URL` - Your backend API URL
+
+**Backend (Railway/Render):**
+- `DATABASE_URL` - MongoDB Atlas connection string
+- `DATABASE_NAME` - Database name (signalscope)
+- `SECRET_KEY` - JWT secret key
+- `ENVIRONMENT` - Set to `production`
+- `CORS_ORIGINS` - Frontend URL (optional, auto-handles Vercel)
+
 ## 📄 License
 
 This project is private and proprietary.

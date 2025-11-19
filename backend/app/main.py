@@ -12,8 +12,10 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 import uvicorn
 import traceback
+import os
 
 from .database import get_database, connect_to_mongo, close_mongo_connection
+from .config import settings
 from .schemas import (
     UserCreate, UserLogin, UserResponse, Token,
     TowerResponse, ReportCreate, ReportResponse
@@ -31,14 +33,16 @@ app = FastAPI(
 )
 
 # CORS configuration - must be before routes
+# Get CORS origins from environment or use defaults
+cors_origins = settings.cors_origins_list
+
+# Always add Vercel patterns for production deployment
+vercel_regex = r"https://.*\.vercel\.(app|dev)"
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://localhost:3000", 
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:3000"
-    ],
+    allow_origins=cors_origins,
+    allow_origin_regex=vercel_regex,  # Allow all Vercel deployments
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
     allow_headers=["*"],
@@ -48,6 +52,32 @@ app.add_middleware(
 
 # Custom middleware to ensure CORS headers on ALL responses including errors
 class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
+    def is_allowed_origin(self, origin: Optional[str]) -> bool:
+        """Check if origin is allowed"""
+        if not origin:
+            return False
+        
+        # In production, allow all origins (Vercel deployments vary)
+        if os.getenv("ENVIRONMENT") == "production" or os.getenv("VERCEL") == "1":
+            return True
+        
+        # For development, check specific origins
+        allowed_origins = settings.cors_origins_list
+        if "*" in allowed_origins:
+            return True
+        
+        # Check exact match or Vercel pattern
+        if origin in allowed_origins:
+            return True
+        
+        # Check Vercel pattern
+        import re
+        vercel_pattern = r"https://.*\.vercel\.(app|dev)"
+        if re.match(vercel_pattern, origin):
+            return True
+        
+        return False
+    
     async def dispatch(self, request: Request, call_next):
         origin = request.headers.get("origin")
         try:
@@ -55,8 +85,8 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
         except Exception as exc:
             # Handle any exception and create response with CORS headers
             headers = {}
-            if origin and origin in ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]:
-                headers["Access-Control-Allow-Origin"] = origin
+            if self.is_allowed_origin(origin):
+                headers["Access-Control-Allow-Origin"] = origin or "*"
                 headers["Access-Control-Allow-Credentials"] = "true"
                 headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
                 headers["Access-Control-Allow-Headers"] = "*"
@@ -71,8 +101,8 @@ class EnsureCORSHeadersMiddleware(BaseHTTPMiddleware):
             return response
         
         # Add CORS headers to all successful responses
-        if origin and origin in ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000"]:
-            response.headers["Access-Control-Allow-Origin"] = origin
+        if self.is_allowed_origin(origin):
+            response.headers["Access-Control-Allow-Origin"] = origin or "*"
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD"
             response.headers["Access-Control-Allow-Headers"] = "*"
@@ -299,6 +329,15 @@ async def get_analytics(db: AsyncIOMotorDatabase = Depends(get_database)):
         "towers_by_carrier": towers_by_carrier,
         "total_towers": total_towers,
         "total_reports": total_reports
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for deployment monitoring"""
+    return {
+        "status": "healthy",
+        "service": "SignalScope API",
+        "version": "1.0.0"
     }
 
 @app.get("/")

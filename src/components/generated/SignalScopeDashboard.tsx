@@ -421,6 +421,314 @@ export const SignalScopeDashboard = () => {
       { id: 't138', lat: 44.9778, lng: -93.2650, operator: 'AT&T', height: 145, tech: ['LTE', '5G'] },
       { id: 't139', lat: 44.9784, lng: -93.2654, operator: 'Verizon', height: 150, tech: ['LTE', '5G'] },
       { id: 't140', lat: 44.9761, lng: -93.2626, operator: 'T-Mobile', height: 140, tech: ['LTE', '5G'] },
+      
+      // Orlando area
+      { id: 't141', lat: 28.5383, lng: -81.3792, operator: 'T-Mobile', height: 140, tech: ['LTE', '5G'] },
+      { id: 't142', lat: 28.5389, lng: -81.3788, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't143', lat: 28.5356, lng: -81.3765, operator: 'AT&T', height: 135, tech: ['LTE', '5G'] },
+      { id: 't144', lat: 28.5412, lng: -81.3815, operator: 'T-Mobile', height: 150, tech: ['5G'] },
+      { id: 't145', lat: 28.5328, lng: -81.3734, operator: 'Verizon', height: 155, tech: ['LTE', '5G'] },
+      
+      // Tampa area
+      { id: 't146', lat: 27.9506, lng: -82.4572, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't147', lat: 27.9512, lng: -82.4578, operator: 'Verizon', height: 140, tech: ['LTE', '5G'] },
+      { id: 't148', lat: 27.9489, lng: -82.4556, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      { id: 't149', lat: 27.9535, lng: -82.4601, operator: 'AT&T', height: 145, tech: ['5G'] },
+      
+      // New Orleans area
+      { id: 't150', lat: 29.9511, lng: -90.0715, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      { id: 't151', lat: 29.9517, lng: -90.0721, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't152', lat: 29.9494, lng: -90.0698, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't153', lat: 29.9540, lng: -90.0743, operator: 'T-Mobile', height: 140, tech: ['5G'] },
+      
+      // Cleveland area
+      { id: 't154', lat: 41.4993, lng: -81.6944, operator: 'AT&T', height: 150, tech: ['LTE', '5G'] },
+      { id: 't155', lat: 41.4999, lng: -81.6950, operator: 'Verizon', height: 155, tech: ['LTE', '5G'] },
+      { id: 't156', lat: 41.4976, lng: -81.6927, operator: 'T-Mobile', height: 145, tech: ['LTE', '5G'] },
+      { id: 't157', lat: 41.5022, lng: -81.6972, operator: 'AT&T', height: 160, tech: ['5G'] },
+      
+      // Pittsburgh area
+      { id: 't158', lat: 40.4406, lng: -79.9959, operator: 'T-Mobile', height: 145, tech: ['LTE', '5G'] },
+      { id: 't159', lat: 40.4412, lng: -79.9965, operator: 'Verizon', height: 150, tech: ['LTE', '5G'] },
+      { id: 't160', lat: 40.4389, lng: -79.9942, operator: 'AT&T', height: 140, tech: ['LTE', '5G'] },
+      { id: 't161', lat: 40.4435, lng: -79.9987, operator: 'T-Mobile', height: 155, tech: ['5G'] },
+      
+      // Cincinnati area
+      { id: 't162', lat: 39.1031, lng: -84.5120, operator: 'AT&T', height: 140, tech: ['LTE', '5G'] },
+      { id: 't163', lat: 39.1037, lng: -84.5126, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't164', lat: 39.1014, lng: -84.5103, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      { id: 't165', lat: 39.1060, lng: -84.5148, operator: 'AT&T', height: 150, tech: ['5G'] },
+      
+      // St. Louis area
+      { id: 't166', lat: 38.6270, lng: -90.1994, operator: 'T-Mobile', height: 140, tech: ['LTE', '5G'] },
+      { id: 't167', lat: 38.6276, lng: -90.2000, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't168', lat: 38.6253, lng: -90.1977, operator: 'AT&T', height: 135, tech: ['LTE', '5G'] },
+      { id: 't169', lat: 38.6299, lng: -90.2022, operator: 'T-Mobile', height: 150, tech: ['5G'] },
+      
+      // Raleigh area
+      { id: 't170', lat: 35.7796, lng: -78.6382, operator: 'AT&T', height: 135, tech: ['LTE', '5G'] },
+      { id: 't171', lat: 35.7802, lng: -78.6388, operator: 'Verizon', height: 140, tech: ['LTE', '5G'] },
+      { id: 't172', lat: 35.7779, lng: -78.6365, operator: 'T-Mobile', height: 130, tech: ['LTE', '5G'] },
+      { id: 't173', lat: 35.7825, lng: -78.6410, operator: 'AT&T', height: 145, tech: ['5G'] },
+      
+      // Virginia Beach area
+      { id: 't174', lat: 36.8529, lng: -75.9780, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      { id: 't175', lat: 36.8535, lng: -75.9786, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't176', lat: 36.8512, lng: -75.9763, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      
+      // Omaha area
+      { id: 't177', lat: 41.2565, lng: -95.9345, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't178', lat: 41.2571, lng: -95.9351, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't179', lat: 41.2548, lng: -95.9328, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      { id: 't180', lat: 41.2594, lng: -95.9373, operator: 'AT&T', height: 140, tech: ['5G'] },
+      
+      // Oakland area
+      { id: 't181', lat: 37.8044, lng: -122.2712, operator: 'T-Mobile', height: 140, tech: ['LTE', '5G'] },
+      { id: 't182', lat: 37.8050, lng: -122.2718, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't183', lat: 37.8027, lng: -122.2695, operator: 'AT&T', height: 135, tech: ['LTE', '5G'] },
+      { id: 't184', lat: 37.8073, lng: -122.2740, operator: 'T-Mobile', height: 150, tech: ['5G'] },
+      
+      // Long Beach area
+      { id: 't185', lat: 33.7701, lng: -118.1937, operator: 'Verizon', height: 125, tech: ['LTE', '5G'] },
+      { id: 't186', lat: 33.7707, lng: -118.1943, operator: 'T-Mobile', height: 130, tech: ['LTE', '5G'] },
+      { id: 't187', lat: 33.7684, lng: -118.1920, operator: 'AT&T', height: 120, tech: ['LTE', '5G'] },
+      { id: 't188', lat: 33.7730, lng: -118.1965, operator: 'Verizon', height: 135, tech: ['5G'] },
+      
+      // Arlington, TX area
+      { id: 't189', lat: 32.7357, lng: -97.1081, operator: 'AT&T', height: 145, tech: ['LTE', '5G'] },
+      { id: 't190', lat: 32.7363, lng: -97.1087, operator: 'Verizon', height: 150, tech: ['LTE', '5G'] },
+      { id: 't191', lat: 32.7340, lng: -97.1064, operator: 'T-Mobile', height: 140, tech: ['LTE', '5G'] },
+      { id: 't192', lat: 32.7386, lng: -97.1109, operator: 'AT&T', height: 155, tech: ['5G'] },
+      
+      // Bakersfield area
+      { id: 't193', lat: 35.3733, lng: -119.0187, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      { id: 't194', lat: 35.3739, lng: -119.0193, operator: 'Verizon', height: 125, tech: ['LTE', '5G'] },
+      { id: 't195', lat: 35.3716, lng: -119.0170, operator: 'AT&T', height: 115, tech: ['LTE', '5G'] },
+      
+      // Aurora, CO area
+      { id: 't196', lat: 39.7294, lng: -104.8319, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      { id: 't197', lat: 39.7300, lng: -104.8325, operator: 'Verizon', height: 140, tech: ['LTE', '5G'] },
+      { id: 't198', lat: 39.7277, lng: -104.8302, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't199', lat: 39.7323, lng: -104.8347, operator: 'T-Mobile', height: 145, tech: ['5G'] },
+      
+      // Anaheim area
+      { id: 't200', lat: 33.8366, lng: -117.9143, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't201', lat: 33.8372, lng: -117.9149, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      { id: 't202', lat: 33.8349, lng: -117.9126, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      { id: 't203', lat: 33.8395, lng: -117.9171, operator: 'Verizon', height: 140, tech: ['5G'] },
+      
+      // Santa Ana area
+      { id: 't204', lat: 33.7456, lng: -117.8677, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      { id: 't205', lat: 33.7462, lng: -117.8683, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't206', lat: 33.7439, lng: -117.8660, operator: 'AT&T', height: 120, tech: ['LTE', '5G'] },
+      
+      // Corpus Christi area
+      { id: 't207', lat: 27.8006, lng: -97.3964, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      { id: 't208', lat: 27.8012, lng: -97.3970, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't209', lat: 27.7989, lng: -97.3947, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      
+      // Riverside area
+      { id: 't210', lat: 33.9533, lng: -117.3962, operator: 'T-Mobile', height: 130, tech: ['LTE', '5G'] },
+      { id: 't211', lat: 33.9539, lng: -117.3968, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't212', lat: 33.9516, lng: -117.3945, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      { id: 't213', lat: 33.9562, lng: -117.3990, operator: 'T-Mobile', height: 140, tech: ['5G'] },
+      
+      // Lexington area
+      { id: 't214', lat: 38.0406, lng: -84.5037, operator: 'AT&T', height: 135, tech: ['LTE', '5G'] },
+      { id: 't215', lat: 38.0412, lng: -84.5043, operator: 'Verizon', height: 140, tech: ['LTE', '5G'] },
+      { id: 't216', lat: 38.0389, lng: -84.5020, operator: 'T-Mobile', height: 130, tech: ['LTE', '5G'] },
+      
+      // Stockton area
+      { id: 't217', lat: 37.9577, lng: -121.2908, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      { id: 't218', lat: 37.9583, lng: -121.2914, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't219', lat: 37.9560, lng: -121.2891, operator: 'AT&T', height: 120, tech: ['LTE', '5G'] },
+      
+      // Henderson, NV area
+      { id: 't220', lat: 36.0395, lng: -114.9817, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      { id: 't221', lat: 36.0401, lng: -114.9823, operator: 'Verizon', height: 140, tech: ['LTE', '5G'] },
+      { id: 't222', lat: 36.0378, lng: -114.9800, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't223', lat: 36.0424, lng: -114.9845, operator: 'T-Mobile', height: 145, tech: ['5G'] },
+      
+      // St. Paul area
+      { id: 't224', lat: 44.9537, lng: -93.0900, operator: 'AT&T', height: 140, tech: ['LTE', '5G'] },
+      { id: 't225', lat: 44.9543, lng: -93.0906, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't226', lat: 44.9520, lng: -93.0883, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      
+      // Toledo area
+      { id: 't227', lat: 41.6528, lng: -83.5379, operator: 'T-Mobile', height: 140, tech: ['LTE', '5G'] },
+      { id: 't228', lat: 41.6534, lng: -83.5385, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't229', lat: 41.6511, lng: -83.5362, operator: 'AT&T', height: 135, tech: ['LTE', '5G'] },
+      
+      // Greensboro area
+      { id: 't230', lat: 36.0726, lng: -79.7920, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't231', lat: 36.0732, lng: -79.7926, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't232', lat: 36.0709, lng: -79.7903, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      
+      // Plano area
+      { id: 't233', lat: 33.0198, lng: -96.6989, operator: 'T-Mobile', height: 140, tech: ['LTE', '5G'] },
+      { id: 't234', lat: 33.0204, lng: -96.6995, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't235', lat: 33.0181, lng: -96.6972, operator: 'AT&T', height: 135, tech: ['LTE', '5G'] },
+      { id: 't236', lat: 33.0227, lng: -96.7017, operator: 'T-Mobile', height: 150, tech: ['5G'] },
+      
+      // Lincoln area
+      { id: 't237', lat: 40.8136, lng: -96.7026, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      { id: 't238', lat: 40.8142, lng: -96.7032, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't239', lat: 40.8119, lng: -96.7009, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      
+      // Buffalo area
+      { id: 't240', lat: 42.8864, lng: -78.8784, operator: 'T-Mobile', height: 145, tech: ['LTE', '5G'] },
+      { id: 't241', lat: 42.8870, lng: -78.8790, operator: 'Verizon', height: 150, tech: ['LTE', '5G'] },
+      { id: 't242', lat: 42.8847, lng: -78.8767, operator: 'AT&T', height: 140, tech: ['LTE', '5G'] },
+      { id: 't243', lat: 42.8893, lng: -78.8812, operator: 'T-Mobile', height: 155, tech: ['5G'] },
+      
+      // Jersey City area
+      { id: 't244', lat: 40.7178, lng: -74.0431, operator: 'AT&T', height: 150, tech: ['LTE', '5G'] },
+      { id: 't245', lat: 40.7184, lng: -74.0437, operator: 'Verizon', height: 155, tech: ['LTE', '5G'] },
+      { id: 't246', lat: 40.7161, lng: -74.0414, operator: 'T-Mobile', height: 145, tech: ['LTE', '5G'] },
+      
+      // Chula Vista area
+      { id: 't247', lat: 32.6401, lng: -117.0842, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      { id: 't248', lat: 32.6407, lng: -117.0848, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't249', lat: 32.6384, lng: -117.0825, operator: 'AT&T', height: 120, tech: ['LTE', '5G'] },
+      
+      // Norfolk area
+      { id: 't250', lat: 36.8468, lng: -76.2852, operator: 'AT&T', height: 120, tech: ['LTE', '5G'] },
+      { id: 't251', lat: 36.8474, lng: -76.2858, operator: 'Verizon', height: 125, tech: ['LTE', '5G'] },
+      { id: 't252', lat: 36.8451, lng: -76.2835, operator: 'T-Mobile', height: 115, tech: ['LTE', '5G'] },
+      
+      // Chandler area
+      { id: 't253', lat: 33.3062, lng: -111.8413, operator: 'T-Mobile', height: 130, tech: ['LTE', '5G'] },
+      { id: 't254', lat: 33.3068, lng: -111.8419, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't255', lat: 33.3045, lng: -111.8396, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      { id: 't256', lat: 33.3091, lng: -111.8441, operator: 'T-Mobile', height: 140, tech: ['5G'] },
+      
+      // Laredo area
+      { id: 't257', lat: 27.5306, lng: -99.4803, operator: 'AT&T', height: 115, tech: ['LTE', '5G'] },
+      { id: 't258', lat: 27.5312, lng: -99.4809, operator: 'Verizon', height: 120, tech: ['LTE', '5G'] },
+      { id: 't259', lat: 27.5289, lng: -99.4786, operator: 'T-Mobile', height: 110, tech: ['LTE', '5G'] },
+      
+      // Madison area
+      { id: 't260', lat: 43.0731, lng: -89.4012, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      { id: 't261', lat: 43.0737, lng: -89.4018, operator: 'Verizon', height: 140, tech: ['LTE', '5G'] },
+      { id: 't262', lat: 43.0714, lng: -89.3995, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't263', lat: 43.0760, lng: -89.4040, operator: 'T-Mobile', height: 145, tech: ['5G'] },
+      
+      // Durham area
+      { id: 't264', lat: 35.9940, lng: -78.8986, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't265', lat: 35.9946, lng: -78.8992, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't266', lat: 35.9923, lng: -78.8969, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      
+      // Lubbock area
+      { id: 't267', lat: 33.5779, lng: -101.8552, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      { id: 't268', lat: 33.5785, lng: -101.8558, operator: 'Verizon', height: 125, tech: ['LTE', '5G'] },
+      { id: 't269', lat: 33.5762, lng: -101.8535, operator: 'AT&T', height: 115, tech: ['LTE', '5G'] },
+      
+      // Winston-Salem area
+      { id: 't270', lat: 36.0999, lng: -80.2442, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't271', lat: 36.1005, lng: -80.2448, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't272', lat: 36.0982, lng: -80.2425, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      
+      // Garland area
+      { id: 't273', lat: 32.9126, lng: -96.6389, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      { id: 't274', lat: 32.9132, lng: -96.6395, operator: 'Verizon', height: 140, tech: ['LTE', '5G'] },
+      { id: 't275', lat: 32.9109, lng: -96.6372, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't276', lat: 32.9155, lng: -96.6417, operator: 'T-Mobile', height: 145, tech: ['5G'] },
+      
+      // Glendale area
+      { id: 't277', lat: 33.5387, lng: -112.1860, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't278', lat: 33.5393, lng: -112.1866, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't279', lat: 33.5370, lng: -112.1843, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      
+      // Hialeah area
+      { id: 't280', lat: 25.8576, lng: -80.2781, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      { id: 't281', lat: 25.8582, lng: -80.2787, operator: 'Verizon', height: 125, tech: ['LTE', '5G'] },
+      { id: 't282', lat: 25.8559, lng: -80.2764, operator: 'AT&T', height: 115, tech: ['LTE', '5G'] },
+      
+      // Reno area
+      { id: 't283', lat: 39.5296, lng: -119.8138, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      { id: 't284', lat: 39.5302, lng: -119.8144, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't285', lat: 39.5279, lng: -119.8121, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      { id: 't286', lat: 39.5325, lng: -119.8166, operator: 'AT&T', height: 135, tech: ['5G'] },
+      
+      // Chesapeake area
+      { id: 't287', lat: 36.7682, lng: -76.2875, operator: 'T-Mobile', height: 115, tech: ['LTE', '5G'] },
+      { id: 't288', lat: 36.7688, lng: -76.2881, operator: 'Verizon', height: 120, tech: ['LTE', '5G'] },
+      { id: 't289', lat: 36.7665, lng: -76.2858, operator: 'AT&T', height: 110, tech: ['LTE', '5G'] },
+      
+      // Scottsdale area
+      { id: 't290', lat: 33.4942, lng: -111.9261, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      { id: 't291', lat: 33.4948, lng: -111.9267, operator: 'Verizon', height: 140, tech: ['LTE', '5G'] },
+      { id: 't292', lat: 33.4925, lng: -111.9244, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't293', lat: 33.4971, lng: -111.9289, operator: 'T-Mobile', height: 145, tech: ['5G'] },
+      
+      // North Las Vegas area
+      { id: 't294', lat: 36.1989, lng: -115.1175, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't295', lat: 36.1995, lng: -115.1181, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't296', lat: 36.1972, lng: -115.1158, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      
+      // Fremont area
+      { id: 't297', lat: 37.5483, lng: -121.9886, operator: 'T-Mobile', height: 130, tech: ['LTE', '5G'] },
+      { id: 't298', lat: 37.5489, lng: -121.9892, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't299', lat: 37.5466, lng: -121.9869, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      { id: 't300', lat: 37.5512, lng: -121.9914, operator: 'T-Mobile', height: 140, tech: ['5G'] },
+      
+      // Boise area
+      { id: 't301', lat: 43.6150, lng: -116.2023, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      { id: 't302', lat: 43.6156, lng: -116.2029, operator: 'Verizon', height: 130, tech: ['LTE', '5G'] },
+      { id: 't303', lat: 43.6133, lng: -116.2006, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      { id: 't304', lat: 43.6179, lng: -116.2051, operator: 'AT&T', height: 135, tech: ['5G'] },
+      
+      // Richmond area
+      { id: 't305', lat: 37.5407, lng: -77.4360, operator: 'T-Mobile', height: 130, tech: ['LTE', '5G'] },
+      { id: 't306', lat: 37.5413, lng: -77.4366, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't307', lat: 37.5390, lng: -77.4343, operator: 'AT&T', height: 125, tech: ['LTE', '5G'] },
+      
+      // Spokane area
+      { id: 't308', lat: 47.6588, lng: -117.4260, operator: 'AT&T', height: 130, tech: ['LTE', '5G'] },
+      { id: 't309', lat: 47.6594, lng: -117.4266, operator: 'Verizon', height: 135, tech: ['LTE', '5G'] },
+      { id: 't310', lat: 47.6571, lng: -117.4243, operator: 'T-Mobile', height: 125, tech: ['LTE', '5G'] },
+      
+      // Baton Rouge area
+      { id: 't311', lat: 30.4515, lng: -91.1871, operator: 'T-Mobile', height: 120, tech: ['LTE', '5G'] },
+      { id: 't312', lat: 30.4521, lng: -91.1877, operator: 'Verizon', height: 125, tech: ['LTE', '5G'] },
+      { id: 't313', lat: 30.4498, lng: -91.1854, operator: 'AT&T', height: 115, tech: ['LTE', '5G'] },
+      { id: 't314', lat: 30.4544, lng: -91.1899, operator: 'T-Mobile', height: 130, tech: ['5G'] },
+      
+      // Tacoma area
+      { id: 't315', lat: 47.2529, lng: -122.4443, operator: 'AT&T', height: 140, tech: ['LTE', '5G'] },
+      { id: 't316', lat: 47.2535, lng: -122.4449, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't317', lat: 47.2512, lng: -122.4426, operator: 'T-Mobile', height: 135, tech: ['LTE', '5G'] },
+      
+      // Irving area
+      { id: 't318', lat: 32.8140, lng: -96.9489, operator: 'T-Mobile', height: 140, tech: ['LTE', '5G'] },
+      { id: 't319', lat: 32.8146, lng: -96.9495, operator: 'Verizon', height: 145, tech: ['LTE', '5G'] },
+      { id: 't320', lat: 32.8123, lng: -96.9472, operator: 'AT&T', height: 135, tech: ['LTE', '5G'] },
+      { id: 't321', lat: 32.8169, lng: -96.9517, operator: 'T-Mobile', height: 150, tech: ['5G'] },
+      
+      // Expand NYC with more towers
+      { id: 't322', lat: 40.7289, lng: -73.9962, operator: 'T-Mobile', height: 148, tech: ['LTE', '5G'] },
+      { id: 't323', lat: 40.7295, lng: -73.9956, operator: 'Verizon', height: 162, tech: ['LTE', '5G'] },
+      { id: 't324', lat: 40.7272, lng: -73.9979, operator: 'AT&T', height: 152, tech: ['5G'] },
+      
+      // Expand LA with more towers
+      { id: 't325', lat: 34.0639, lng: -118.4458, operator: 'T-Mobile', height: 138, tech: ['LTE', '5G'] },
+      { id: 't326', lat: 34.0645, lng: -118.4452, operator: 'Verizon', height: 142, tech: ['LTE', '5G'] },
+      { id: 't327', lat: 34.0622, lng: -118.4475, operator: 'AT&T', height: 147, tech: ['5G'] },
+      
+      // Expand Chicago with more towers
+      { id: 't328', lat: 41.8756, lng: -87.6244, operator: 'T-Mobile', height: 168, tech: ['LTE', '5G'] },
+      { id: 't329', lat: 41.8762, lng: -87.6238, operator: 'Verizon', height: 172, tech: ['LTE', '5G'] },
+      { id: 't330', lat: 41.8739, lng: -87.6261, operator: 'AT&T', height: 178, tech: ['5G'] },
+      
+      // Expand Houston with more towers
+      { id: 't331', lat: 29.7512, lng: -95.3621, operator: 'T-Mobile', height: 142, tech: ['LTE', '5G'] },
+      { id: 't332', lat: 29.7518, lng: -95.3615, operator: 'Verizon', height: 148, tech: ['LTE', '5G'] },
+      { id: 't333', lat: 29.7495, lng: -95.3638, operator: 'AT&T', height: 144, tech: ['5G'] },
+      
+      // Expand Phoenix with more towers
+      { id: 't334', lat: 33.4518, lng: -112.0728, operator: 'T-Mobile', height: 152, tech: ['LTE', '5G'] },
+      { id: 't335', lat: 33.4524, lng: -112.0722, operator: 'Verizon', height: 158, tech: ['LTE', '5G'] },
+      { id: 't336', lat: 33.4501, lng: -112.0745, operator: 'AT&T', height: 164, tech: ['5G'] },
     ];
     setTowers(mockTowers);
   };
@@ -524,6 +832,58 @@ export const SignalScopeDashboard = () => {
     'atlanta': { lat: 33.7490, lng: -84.3880, name: 'Atlanta, GA' },
     'miami': { lat: 25.7617, lng: -80.1918, name: 'Miami, FL' },
     'minneapolis': { lat: 44.9778, lng: -93.2650, name: 'Minneapolis, MN' },
+    'orlando': { lat: 28.5383, lng: -81.3792, name: 'Orlando, FL' },
+    'tampa': { lat: 27.9506, lng: -82.4572, name: 'Tampa, FL' },
+    'new orleans': { lat: 29.9511, lng: -90.0715, name: 'New Orleans, LA' },
+    'nola': { lat: 29.9511, lng: -90.0715, name: 'New Orleans, LA' },
+    'cleveland': { lat: 41.4993, lng: -81.6944, name: 'Cleveland, OH' },
+    'pittsburgh': { lat: 40.4406, lng: -79.9959, name: 'Pittsburgh, PA' },
+    'cincinnati': { lat: 39.1031, lng: -84.5120, name: 'Cincinnati, OH' },
+    'st louis': { lat: 38.6270, lng: -90.1994, name: 'St. Louis, MO' },
+    'raleigh': { lat: 35.7796, lng: -78.6382, name: 'Raleigh, NC' },
+    'virginia beach': { lat: 36.8529, lng: -75.9780, name: 'Virginia Beach, VA' },
+    'omaha': { lat: 41.2565, lng: -95.9345, name: 'Omaha, NE' },
+    'oakland': { lat: 37.8044, lng: -122.2712, name: 'Oakland, CA' },
+    'long beach': { lat: 33.7701, lng: -118.1937, name: 'Long Beach, CA' },
+    'arlington': { lat: 32.7357, lng: -97.1081, name: 'Arlington, TX' },
+    'bakersfield': { lat: 35.3733, lng: -119.0187, name: 'Bakersfield, CA' },
+    'aurora': { lat: 39.7294, lng: -104.8319, name: 'Aurora, CO' },
+    'anaheim': { lat: 33.8366, lng: -117.9143, name: 'Anaheim, CA' },
+    'santa ana': { lat: 33.7456, lng: -117.8677, name: 'Santa Ana, CA' },
+    'corpus christi': { lat: 27.8006, lng: -97.3964, name: 'Corpus Christi, TX' },
+    'riverside': { lat: 33.9533, lng: -117.3962, name: 'Riverside, CA' },
+    'lexington': { lat: 38.0406, lng: -84.5037, name: 'Lexington, KY' },
+    'stockton': { lat: 37.9577, lng: -121.2908, name: 'Stockton, CA' },
+    'henderson': { lat: 36.0395, lng: -114.9817, name: 'Henderson, NV' },
+    'st paul': { lat: 44.9537, lng: -93.0900, name: 'St. Paul, MN' },
+    'toledo': { lat: 41.6528, lng: -83.5379, name: 'Toledo, OH' },
+    'greensboro': { lat: 36.0726, lng: -79.7920, name: 'Greensboro, NC' },
+    'plano': { lat: 33.0198, lng: -96.6989, name: 'Plano, TX' },
+    'lincoln': { lat: 40.8136, lng: -96.7026, name: 'Lincoln, NE' },
+    'buffalo': { lat: 42.8864, lng: -78.8784, name: 'Buffalo, NY' },
+    'jersey city': { lat: 40.7178, lng: -74.0431, name: 'Jersey City, NJ' },
+    'chula vista': { lat: 32.6401, lng: -117.0842, name: 'Chula Vista, CA' },
+    'norfolk': { lat: 36.8468, lng: -76.2852, name: 'Norfolk, VA' },
+    'chandler': { lat: 33.3062, lng: -111.8413, name: 'Chandler, AZ' },
+    'laredo': { lat: 27.5306, lng: -99.4803, name: 'Laredo, TX' },
+    'madison': { lat: 43.0731, lng: -89.4012, name: 'Madison, WI' },
+    'durham': { lat: 35.9940, lng: -78.8986, name: 'Durham, NC' },
+    'lubbock': { lat: 33.5779, lng: -101.8552, name: 'Lubbock, TX' },
+    'winston salem': { lat: 36.0999, lng: -80.2442, name: 'Winston-Salem, NC' },
+    'garland': { lat: 32.9126, lng: -96.6389, name: 'Garland, TX' },
+    'glendale': { lat: 33.5387, lng: -112.1860, name: 'Glendale, AZ' },
+    'hialeah': { lat: 25.8576, lng: -80.2781, name: 'Hialeah, FL' },
+    'reno': { lat: 39.5296, lng: -119.8138, name: 'Reno, NV' },
+    'chesapeake': { lat: 36.7682, lng: -76.2875, name: 'Chesapeake, VA' },
+    'scottsdale': { lat: 33.4942, lng: -111.9261, name: 'Scottsdale, AZ' },
+    'north las vegas': { lat: 36.1989, lng: -115.1175, name: 'North Las Vegas, NV' },
+    'fremont': { lat: 37.5483, lng: -121.9886, name: 'Fremont, CA' },
+    'boise': { lat: 43.6150, lng: -116.2023, name: 'Boise, ID' },
+    'richmond': { lat: 37.5407, lng: -77.4360, name: 'Richmond, VA' },
+    'spokane': { lat: 47.6588, lng: -117.4260, name: 'Spokane, WA' },
+    'baton rouge': { lat: 30.4515, lng: -91.1871, name: 'Baton Rouge, LA' },
+    'tacoma': { lat: 47.2529, lng: -122.4443, name: 'Tacoma, WA' },
+    'irving': { lat: 32.8140, lng: -96.9489, name: 'Irving, TX' },
   };
 
   const findCityCoordinates = (query: string): { lat: number; lng: number; name: string } | null => {
