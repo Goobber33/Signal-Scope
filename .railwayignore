@@ -1,4 +1,4 @@
-frontend/
+src/
 package.json
 package-lock.json
 yarn.lock
@@ -6,3 +6,12 @@ node_modules/
 .yarn/
 .next/
 dist/
+public/
+vite.config.ts
+tsconfig.json
+tsconfig.app.json
+tsconfig.node.json
+index.html
+components.json
+eslint.config.js
+vercel.json
