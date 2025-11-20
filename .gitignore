@@ -7,24 +7,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
 *.local
 
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-venv/
-env/
-ENV/
+# Environment variables
 .env
-*.egg-info/
-dist/
-build/
+.env.local
+.env.*.local
 
 # Editor directories and files
 .vscode/*
@@ -36,3 +28,6 @@ build/
 *.njsproj
 *.sln
 *.sw?
+
+# OS
+Thumbs.db
