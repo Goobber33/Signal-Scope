@@ -1,17 +1,8 @@
-# Ignore frontend entirely
 frontend/
-node_modules/
 package.json
 package-lock.json
 yarn.lock
+node_modules/
 .yarn/
 .next/
 dist/
-public/
-src/
-next.config.js
-postcss.config.js
-tailwind.config.js
-tsconfig.json
-vite.config.*
-pnpm-lock.yaml
