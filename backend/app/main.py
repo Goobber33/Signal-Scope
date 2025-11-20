@@ -23,6 +23,45 @@ logger.info(f"[CORS] Configured origin regex: {ALLOWED_ORIGIN_REGEX}")
 
 app = FastAPI(title="SignalScope API", version="1.0.0")
 
+# CRITICAL: Explicit OPTIONS route handler - runs BEFORE middleware
+# This ensures OPTIONS requests are handled even if middleware doesn't catch them
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    """Handle all OPTIONS preflight requests - runs before middleware"""
+    origin = request.headers.get("origin", "")
+    path = f"/{full_path}" if full_path else "/"
+    
+    logger.info(f"[OPTIONS-ROUTE] ✅ Intercepted OPTIONS for {path} from origin: {origin}")
+    
+    # Check if origin is allowed
+    is_allowed = False
+    if origin in ALLOWED_ORIGINS:
+        is_allowed = True
+        logger.info(f"[OPTIONS-ROUTE] ✅ Origin matches exact list: {origin}")
+    elif origin and re.match(ALLOWED_ORIGIN_REGEX, origin):
+        is_allowed = True
+        logger.info(f"[OPTIONS-ROUTE] ✅ Origin matches regex: {origin}")
+    else:
+        logger.warning(f"[OPTIONS-ROUTE] ❌ Origin NOT allowed: {origin}")
+    
+    # Build response headers - ALWAYS return CORS headers
+    response_headers = {
+        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "3600",
+    }
+    
+    # Always set the origin header (browser requires exact match)
+    if origin:
+        response_headers["Access-Control-Allow-Origin"] = origin
+        logger.info(f"[OPTIONS-ROUTE] ✅ Returning CORS headers with origin: {origin}")
+    else:
+        response_headers["Access-Control-Allow-Origin"] = "*"
+        logger.warning(f"[OPTIONS-ROUTE] ⚠️ No origin header, returning *")
+    
+    return Response(status_code=200, headers=response_headers)
+
 # CRITICAL: OPTIONS handler middleware - MUST be added FIRST (runs last, executes first)
 # This intercepts OPTIONS requests and returns immediately WITHOUT calling call_next
 class OPTIONSHandlerMiddleware(BaseHTTPMiddleware):
