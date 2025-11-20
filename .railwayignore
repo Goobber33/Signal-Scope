@@ -1,12 +1,14 @@
-node_modules
+# Ignore frontend entirely
+frontend/
+node_modules/
 package.json
 package-lock.json
 yarn.lock
-.yarn
-.next
-dist
-public
-src
+.yarn/
+.next/
+dist/
+public/
+src/
 next.config.js
 postcss.config.js
 tailwind.config.js
