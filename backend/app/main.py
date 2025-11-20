@@ -1,6 +1,7 @@
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from .database import connect_to_mongo, close_mongo_connection
 from .routers import auth, towers, reports, analytics
@@ -17,6 +18,16 @@ ALLOWED_ORIGINS = [
 ]
 
 logger.info(f"[CORS] Allowing origins: {ALLOWED_ORIGINS}")
+
+# Simple request logger to verify requests reach the app
+class SimpleLoggerMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        logger.info(f"[REQUEST] {request.method} {request.url.path} | Origin: {request.headers.get('origin', 'none')}")
+        response = await call_next(request)
+        logger.info(f"[RESPONSE] {request.method} {request.url.path} | Status: {response.status_code}")
+        return response
+
+app.add_middleware(SimpleLoggerMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
