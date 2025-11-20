@@ -1,3 +1,5 @@
+.nixpacks/
+.nixpacks.toml
 src/
 package.json
 package-lock.json
