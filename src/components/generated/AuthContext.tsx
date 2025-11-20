@@ -49,6 +49,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Required for CORS with credentials
         body: JSON.stringify({
           email,
           password
@@ -75,6 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include', // Required for CORS with credentials
         body: JSON.stringify({
           email,
           password,

@@ -1,5 +1,6 @@
 import logging
-from fastapi import FastAPI, Request
+import re
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
@@ -21,6 +22,45 @@ ALLOWED_ORIGIN_REGEX = r"https://.*\.vercel\.app"
 
 logger.info(f"[CORS] Configured allowed origins: {ALLOWED_ORIGINS}")
 logger.info(f"[CORS] Configured origin regex: {ALLOWED_ORIGIN_REGEX}")
+
+# CRITICAL: OPTIONS handler MUST be at the top, before any middleware
+# This ensures Railway doesn't block OPTIONS requests before they reach FastAPI
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    """Handle all OPTIONS preflight requests - runs BEFORE middleware"""
+    origin = request.headers.get("origin", "")
+    
+    logger.info(f"[OPTIONS-HANDLER] Received preflight for /{full_path} from origin: {origin}")
+    
+    # Check if origin is allowed
+    is_allowed = False
+    if origin in ALLOWED_ORIGINS:
+        is_allowed = True
+        logger.info(f"[OPTIONS-HANDLER] Origin matches exact list: {origin}")
+    elif re.match(ALLOWED_ORIGIN_REGEX, origin):
+        is_allowed = True
+        logger.info(f"[OPTIONS-HANDLER] Origin matches regex: {origin}")
+    else:
+        logger.warning(f"[OPTIONS-HANDLER] Origin NOT allowed: {origin}")
+    
+    # Return CORS headers (even if not allowed, to avoid browser errors)
+    # The actual request will be blocked by CORSMiddleware if not allowed
+    response_headers = {
+        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "3600",
+    }
+    
+    if is_allowed:
+        response_headers["Access-Control-Allow-Origin"] = origin
+        logger.info(f"[OPTIONS-HANDLER] Returning CORS headers for allowed origin: {origin}")
+    else:
+        # Still return headers, but CORSMiddleware will handle the actual blocking
+        response_headers["Access-Control-Allow-Origin"] = origin if origin else "*"
+        logger.warning(f"[OPTIONS-HANDLER] Returning CORS headers for unallowed origin: {origin}")
+    
+    return Response(status_code=200, headers=response_headers)
 
 # Request logging middleware - runs BEFORE CORS middleware
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
