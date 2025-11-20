@@ -11,8 +11,6 @@ from .routers import auth, towers, reports, analytics
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="SignalScope API", version="1.0.0")
-
 # CORS Configuration
 ALLOWED_ORIGINS = [
     "https://signal-scope-psi.vercel.app",
@@ -23,46 +21,55 @@ ALLOWED_ORIGIN_REGEX = r"https://.*\.vercel\.app"
 logger.info(f"[CORS] Configured allowed origins: {ALLOWED_ORIGINS}")
 logger.info(f"[CORS] Configured origin regex: {ALLOWED_ORIGIN_REGEX}")
 
-# CRITICAL: OPTIONS handler MUST be at the top, before any middleware
-# This ensures Railway doesn't block OPTIONS requests before they reach FastAPI
-@app.options("/{full_path:path}")
-async def options_handler(request: Request, full_path: str):
-    """Handle all OPTIONS preflight requests - runs BEFORE middleware"""
-    origin = request.headers.get("origin", "")
-    
-    logger.info(f"[OPTIONS-HANDLER] Received preflight for /{full_path} from origin: {origin}")
-    
-    # Check if origin is allowed
-    is_allowed = False
-    if origin in ALLOWED_ORIGINS:
-        is_allowed = True
-        logger.info(f"[OPTIONS-HANDLER] Origin matches exact list: {origin}")
-    elif re.match(ALLOWED_ORIGIN_REGEX, origin):
-        is_allowed = True
-        logger.info(f"[OPTIONS-HANDLER] Origin matches regex: {origin}")
-    else:
-        logger.warning(f"[OPTIONS-HANDLER] Origin NOT allowed: {origin}")
-    
-    # Return CORS headers (even if not allowed, to avoid browser errors)
-    # The actual request will be blocked by CORSMiddleware if not allowed
-    response_headers = {
-        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
-        "Access-Control-Allow-Credentials": "true",
-        "Access-Control-Max-Age": "3600",
-    }
-    
-    if is_allowed:
-        response_headers["Access-Control-Allow-Origin"] = origin
-        logger.info(f"[OPTIONS-HANDLER] Returning CORS headers for allowed origin: {origin}")
-    else:
-        # Still return headers, but CORSMiddleware will handle the actual blocking
-        response_headers["Access-Control-Allow-Origin"] = origin if origin else "*"
-        logger.warning(f"[OPTIONS-HANDLER] Returning CORS headers for unallowed origin: {origin}")
-    
-    return Response(status_code=200, headers=response_headers)
+app = FastAPI(title="SignalScope API", version="1.0.0")
 
-# Request logging middleware - runs BEFORE CORS middleware
+# CRITICAL: OPTIONS handler middleware - MUST be added FIRST (runs last, executes first)
+# This intercepts OPTIONS requests and returns immediately WITHOUT calling call_next
+class OPTIONSHandlerMiddleware(BaseHTTPMiddleware):
+    """Middleware that handles OPTIONS requests immediately, before FastAPI routing"""
+    
+    async def dispatch(self, request: Request, call_next):
+        # Intercept OPTIONS requests immediately
+        if request.method == "OPTIONS":
+            origin = request.headers.get("origin", "")
+            path = request.url.path
+            
+            logger.info(f"[OPTIONS-MIDDLEWARE] ✅ Intercepted OPTIONS for {path} from origin: {origin}")
+            
+            # Check if origin is allowed
+            is_allowed = False
+            if origin in ALLOWED_ORIGINS:
+                is_allowed = True
+                logger.info(f"[OPTIONS-MIDDLEWARE] ✅ Origin matches exact list: {origin}")
+            elif origin and re.match(ALLOWED_ORIGIN_REGEX, origin):
+                is_allowed = True
+                logger.info(f"[OPTIONS-MIDDLEWARE] ✅ Origin matches regex: {origin}")
+            else:
+                logger.warning(f"[OPTIONS-MIDDLEWARE] ❌ Origin NOT allowed: {origin}")
+            
+            # Build response headers - ALWAYS return CORS headers to prevent browser errors
+            response_headers = {
+                "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type, Authorization, Accept",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Max-Age": "3600",
+            }
+            
+            # Always set the origin header (browser requires exact match)
+            if origin:
+                response_headers["Access-Control-Allow-Origin"] = origin
+                logger.info(f"[OPTIONS-MIDDLEWARE] ✅ Returning CORS headers with origin: {origin}")
+            else:
+                response_headers["Access-Control-Allow-Origin"] = "*"
+                logger.warning(f"[OPTIONS-MIDDLEWARE] ⚠️ No origin header, returning *")
+            
+            # Return response immediately WITHOUT calling call_next
+            return Response(status_code=200, headers=response_headers)
+        
+        # For non-OPTIONS requests, continue normally
+        return await call_next(request)
+
+# Request logging middleware
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         origin = request.headers.get("origin", "NO_ORIGIN")
@@ -73,7 +80,6 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         
         if method == "OPTIONS":
             logger.info(f"[OPTIONS-PREFLIGHT] Path: {path} | Origin: {origin}")
-            logger.info(f"[OPTIONS-PREFLIGHT] Headers: {dict(request.headers)}")
         
         response = await call_next(request)
         
@@ -85,16 +91,19 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
         if cors_headers:
             logger.info(f"[RESPONSE] {method} {path} | CORS Headers: {cors_headers}")
         else:
-            logger.warning(f"[RESPONSE] {method} {path} | NO CORS HEADERS SET!")
+            logger.warning(f"[RESPONSE] {method} {path} | ❌ NO CORS HEADERS SET!")
         
         logger.info(f"[RESPONSE] {method} {path} | Status: {response.status_code}")
         
         return response
 
-# Add request logging middleware FIRST
+# Add OPTIONS handler FIRST (middleware runs in reverse order, so this executes first)
+app.add_middleware(OPTIONSHandlerMiddleware)
+
+# Add request logging middleware
 app.add_middleware(RequestLoggingMiddleware)
 
-# CORS Middleware
+# CORS Middleware (for non-OPTIONS requests)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -122,7 +131,6 @@ async def shutdown():
 @app.get("/debug/cors")
 async def debug_cors(request: Request):
     origin = request.headers.get("origin", "NO_ORIGIN")
-    import re
     
     matches_exact = origin in ALLOWED_ORIGINS
     matches_regex = bool(re.match(ALLOWED_ORIGIN_REGEX, origin)) if origin != "NO_ORIGIN" else False
